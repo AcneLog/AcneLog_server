@@ -1,0 +1,6 @@
+rootProject.name = 'acnelog'
+
+include 'api-module'
+include 'domain-module'
+include 'infra-module'
+include 'common-module'

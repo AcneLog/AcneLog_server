@@ -1,0 +1,19 @@
+jar { enabled = false }
+
+dependencies {
+    // Common Module Dependency
+    implementation project(":common-module")
+    // Domain Module Dependency
+    implementation project(":domain-module")
+    // Infra Module Dependency
+    implementation project(":infra-module")
+
+    // Web MVC Dependency
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Swagger UI - spring doc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
+}
+
+tasks.register("prepareKotlinBuildScriptModel"){}

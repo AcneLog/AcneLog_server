@@ -1,0 +1,9 @@
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    // Swagger UI - spring doc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
+}
+
+tasks.register("prepareKotlinBuildScriptModel"){}
