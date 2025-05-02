@@ -9,7 +9,7 @@ dependencies {
     implementation project(":infra-module")
 
     // PostgreSQL Driver
-    // implementation ''
+    runtimeOnly 'org.postgresql:postgresql'
 
     // JPA
     api 'org.springframework.boot:spring-boot-starter-data-jpa'

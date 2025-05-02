@@ -8,13 +8,9 @@ import org.springframework.context.annotation.PropertySource;
         ignoreResourceNotFound = true,
         value = {
                 "classpath:application.yml",
-                "classpath:application-secret.yml",
                 "classpath:application-common.yml",
                 "classpath:application-domain.yml",
-                "classpath:application-infra.yml",
-                "classpath:application-batch.yml",
-                "classpath:application-notification.yml"
-
+                "classpath:application-infra.yml"
         },
         factory = YamlPropertySourceFactory.class
 )
