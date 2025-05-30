@@ -1,5 +1,9 @@
 jar { enabled = false }
 
+springBoot {
+    mainClass =  'hongik.triple.apimodule.ApiModuleApplication'
+}
+
 dependencies {
     // Common Module Dependency
     implementation project(":common-module")
