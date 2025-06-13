@@ -1,12 +1,10 @@
 package hongik.triple.apimodule.presentation.member;
 
 import hongik.triple.apimodule.application.member.MemberService;
+import hongik.triple.commonmodule.dto.member.MemberRes;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/member")
@@ -17,8 +15,17 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/register")
-    public void register() {
+    public MemberRes register(@RequestParam(name = "provider") String provider) {
         // 회원가입 로직
+        if(provider.equals("kakao")) {
+            // 카카오 로그인 로직
+            return memberService.loginWithKakao(provider);
+        } else if(provider.equals("google")) {
+            // 구글 로그인 로직
+            return memberService.loginWithGoogle(provider);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
+        }
     }
 
     @PostMapping("/withdrawal")
