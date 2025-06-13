@@ -18,9 +18,16 @@ public class Member extends BaseTimeEntity {
     private Long id;
     private String name;
     private String email;
+    private String memberType;
+    private String provider;
+    private String skinType;
 
-    public Member(Long id, String name, String email) {
-        this.id = id;
+    public void update(String name, String skinType) {
+        this.name = name;
+        this.skinType = skinType;
+    }
+
+    public Member(String name, String email) {
         this.name = name;
         this.email = email;
     }

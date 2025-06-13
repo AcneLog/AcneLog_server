@@ -1,9 +1,11 @@
 package hongik.triple.apimodule.presentation.member;
 
 import hongik.triple.apimodule.application.member.MemberService;
+import hongik.triple.apimodule.global.security.PrincipalDetails;
 import hongik.triple.commonmodule.dto.member.MemberRes;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,8 +16,13 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/register")
-    public MemberRes register(@RequestParam(name = "provider") String provider) {
+    /**
+     * 로그인/회원가입 API - OAuth2 제공자에 따라 진행되며, 기존 로그인 정보 유무에 따라 회원가입 또는 로그인 처리
+     * @param provider OAuth2 제공자 (예: kakao, google 등)
+     * @return 회원 정보 응답 (MemberRes)
+     */
+    @PostMapping("/login")
+    public MemberRes login(@RequestParam(name = "provider") String provider) {
         // 회원가입 로직
         if(provider.equals("kakao")) {
             // 카카오 로그인 로직
@@ -29,14 +36,10 @@ public class MemberController {
     }
 
     @PostMapping("/withdrawal")
-    public void withdrawal() {
+    public void withdrawal(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         // 회원탈퇴 로직
     }
 
-    @PostMapping("/login")
-    public void login() {
-
-    }
 
     @PostMapping("/logout")
     public void logout() {
