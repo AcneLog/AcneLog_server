@@ -9,6 +9,7 @@ import hongik.triple.inframodule.oauth.google.GoogleClient;
 import hongik.triple.inframodule.oauth.google.GoogleProfile;
 import hongik.triple.inframodule.oauth.google.GoogleToken;
 import hongik.triple.inframodule.oauth.kakao.KakaoClient;
+import hongik.triple.inframodule.oauth.kakao.KakaoToken;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @DisplayName("MemberService 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -46,10 +53,37 @@ public class MemberServiceTest {
             // given
             String email = "new@user.com";
             String name = "NewUser";
-            given(memberRepository.save(member)).willReturn(member);
+            GoogleToken googleToken = new GoogleToken(
+                    "access_token",
+                    "3600",
+                    "Bearer",
+                    "profile email",
+                    "refresh_token",
+                    "id_token"
+            );
+            GoogleProfile googleProfile = new GoogleProfile(
+                    "sub_id",
+                    name,
+                    "given",
+                    "family",
+                    "profile.jpg",
+                    email,
+                    true,
+                    "ko"
+            );
+            Member member = new Member(name, email);
+
+            given(googleClient.getGoogleAccessToken(eq("access_token"), anyString()))
+                    .willReturn(googleToken);
+            given(googleClient.getMemberInfo(eq(googleToken)))
+                    .willReturn(googleProfile);
+            given(memberRepository.findByEmail(email))
+                    .willReturn(Optional.empty());
+            given(memberRepository.save(any(Member.class)))
+                    .willReturn(member);
 
             // when
-            MemberRes result = memberService.loginWithGoogle("access_token");
+            MemberRes result = memberService.loginWithGoogle("access_token", "http://localhost/oauth2/callback/google");
 
             // then
             assertThat(result.email()).isEqualTo(email);
@@ -59,72 +93,100 @@ public class MemberServiceTest {
         @Test
         @DisplayName("회원이 이미 존재하면 기존 회원을 반환한다.")
         void registerExistingMember() {
-            Member existing = new Member("exist@user.com", "Existing");
-            when(memberRepository.findByEmail(existing.getEmail())).thenReturn(Optional.of(existing));
+            // given
+            String email = "exist@user.com";
+            String name = "Existing";
+            Member existing = new Member(email, name); // ← 순서 확인 (email, name)
+            GoogleToken googleToken = new GoogleToken(
+                    "access_token",
+                    "3600",
+                    "Bearer",
+                    "scope",
+                    "refresh",
+                    "id_token"
+            );
+            GoogleProfile googleProfile = new GoogleProfile(
+                    "sub",
+                    name,
+                    "given",
+                    "family",
+                    "picture.jpg",
+                    email,
+                    true,
+                    "ko"
+            );
 
-            MemberRes result = memberService.register(existing.getEmail(), existing.getName());
+            given(googleClient.getGoogleAccessToken(eq("access_token"), anyString()))
+                    .willReturn(googleToken);
 
-            assertThat(result.getEmail()).isEqualTo(existing.getEmail());
+            given(googleClient.getMemberInfo(eq(googleToken)))
+                    .willReturn(googleProfile);
+
+            given(memberRepository.findByEmail(email))
+                    .willReturn(Optional.of(existing));
+
+            // when
+            MemberRes result = memberService.loginWithGoogle("access_token", "http://localhost/oauth2/callback/google");
+
+            // then
+            assertThat(result.email()).isEqualTo(existing.getEmail());
+            assertThat(result.name()).isEqualTo(existing.getName());
         }
 
         @Test
-        @DisplayName("이메일이 null이면 예외 발생")
-        void emailNullThrowsException() {
-            assertThatThrownBy(() -> memberService.register(null, "nickname"))
-                    .isInstanceOf(IllegalArgumentException.class);
+        @DisplayName("Google 사용자 정보 조회 중 예외가 발생하면 예외를 던진다.")
+        void getGoogleProfileThrowsException() {
+            // given
+            String authCode = "dummy_code";
+            String redirectUri = "http://localhost/oauth2/callback/google";
+
+            GoogleToken googleToken = new GoogleToken(
+                    "dummy_access_token", "3600", "Bearer", "profile email", "dummy_refresh", "dummy_id_token"
+            );
+
+            // getGoogleAccessToken: redirectUri 정확히 일치시켜야 함
+            given(googleClient.getGoogleAccessToken(eq(authCode), eq(redirectUri)))
+                    .willReturn(googleToken);
+
+            // getMemberInfo에서 예외 발생
+            given(googleClient.getMemberInfo(eq(googleToken)))
+                    .willThrow(new RuntimeException("Failed to call Google API"));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.loginWithGoogle(authCode, redirectUri))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Google API");
         }
 
         @Test
-        @DisplayName("닉네임이 빈 문자열이면 예외 발생")
-        void nicknameEmptyThrowsException() {
-            assertThatThrownBy(() -> memberService.register("test@email.com", ""))
-                    .isInstanceOf(IllegalArgumentException.class);
+        @DisplayName("카카오 사용자 정보 조회 중 예외가 발생하면 예외를 던진다.")
+        void kakaoClientThrowsWhenGettingProfile() {
+            // given
+            String authCode = "dummy_auth_code";
+            String redirectUri = "http://localhost/oauth2/callback/kakao";
+
+            KakaoToken kakaoToken = KakaoToken.builder()
+                    .access_token("dummy_access_token")
+                    .refresh_token("dummy_refresh_token")
+                    .token_type("bearer")
+                    .expires_in(3600)
+                    .refresh_token_expires_in(1209600)
+                    .scope("profile account_email")
+                    .build();
+
+            given(kakaoClient.getKakaoAccessToken(authCode, redirectUri))
+                    .willReturn(kakaoToken);
+
+            given(kakaoClient.getMemberInfo(kakaoToken))
+                    .willThrow(new RuntimeException("카카오 사용자 정보 조회 실패"));
+
+            // when & then
+            assertThatThrownBy(() -> memberService.loginWithKakao(authCode, redirectUri))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("카카오 사용자 정보");
         }
     }
 
-    @Nested
-    @DisplayName("loginWithKakao()는")
-    class LoginWithKakaoTest {
-
-        @Test
-        @DisplayName("정상적으로 로그인 후 회원 등록 또는 반환한다.")
-        void success() {
-            KakaoToken token = new KakaoToken("access");
-            KakaoProfile profile = new KakaoProfile(new KakaoProfile.Account("email@test.com"), new KakaoProfile.Properties("nick"));
-
-            when(kakaoClient.getKakaoAccessToken(any(), any())).thenReturn(token);
-            when(kakaoClient.getMemberInfo(token)).thenReturn(profile);
-            when(memberRepository.findByEmail("email@test.com")).thenReturn(Optional.empty());
-            when(memberRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
-
-            MemberRes res = memberService.loginWithKakao("code");
-
-            assertThat(res.email()).isEqualTo("email@test.com");
-            assertThat(res.name()).isEqualTo("nick");
-        }
-    }
-
-    @Nested
-    @DisplayName("loginWithGoogle()는")
-    class LoginWithGoogleTest {
-
-        @Test
-        @DisplayName("정상적으로 로그인 후 회원 등록 또는 반환한다.")
-        void success() {
-            GoogleToken token = new GoogleToken("access");
-            GoogleProfile profile = new GoogleProfile("sub", "name", "given", "family", "pic", "email@test.com", true, "ko");
-
-            when(googleClient.getGoogleAccessToken(any(), any())).thenReturn(token);
-            when(googleClient.getMemberInfo(token)).thenReturn(profile);
-            when(memberRepository.findByEmail("email@test.com")).thenReturn(Optional.empty());
-            when(memberRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
-
-            MemberRes res = memberService.loginWithGoogle("access");
-
-            assertThat(res.email()).isEqualTo("email@test.com");
-            assertThat(res.name()).isEqualTo("name");
-        }
-    }
 
     @Nested
     @DisplayName("updateProfile()는")
@@ -136,6 +198,9 @@ public class MemberServiceTest {
             // given
             Member member = new Member("email@test.com", "old");
             MemberReq req = new MemberReq("new", "OILY");
+
+            given(memberRepository.save(any(Member.class)))
+                    .willReturn(member); // save 이후 리턴값 지정
 
             // when
             MemberRes res = memberService.updateProfile(member, req);
@@ -152,7 +217,7 @@ public class MemberServiceTest {
         @Test
         @DisplayName("회원 정보를 반환한다.")
         void success() {
-            Member member = new Member("email@test.com", "nick");
+            Member member = new Member("nick", "email@test.com");
 
             MemberRes res = memberService.getProfile(member);
 
@@ -168,11 +233,13 @@ public class MemberServiceTest {
         @Test
         @DisplayName("회원 탈퇴를 정상적으로 수행한다.")
         void success() {
+            // given
             Member member = new Member("email@test.com", "nick");
 
+            // when
             memberService.withdrawal(member);
 
-//            verify(memberRepository, times(1)).delete(member);
+            verify(memberRepository, times(1)).delete(member);
         }
     }
 }

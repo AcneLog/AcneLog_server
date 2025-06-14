@@ -16,7 +16,7 @@ plugins {
 	id 'org.springframework.boot' version '3.4.5'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'jacoco'
-	id 'jacoco-report-aggregation' // Jacoco 집계 플러그인
+	id 'jacoco-report-aggregation'
 }
 
 repositories {
@@ -27,12 +27,11 @@ jacoco {
 	toolVersion = '0.8.13'
 }
 
-// jacoco 집계 대상 모듈 지정
 dependencies {
 	jacocoAggregation project(':api-module')
 }
 
-subprojects { // 모든 하위 모듈들에 이 설정을 적용합니다.
+subprojects {
 	apply plugin: 'java'
 	apply plugin: 'java-library'
 	apply plugin: 'org.springframework.boot'
@@ -93,13 +92,13 @@ tasks.register("jacocoRootReport", JacocoReport) {
 	dependsOn = subprojects.collect { it.tasks.named("test") }
 
 	reports {
-		xml.required.set(true)
-		html.required.set(true)
-		csv.required.set(false)
+		xml.required = true
+		html.required = true
+		csv.required = false
 	}
 
 	executionData.setFrom(files(subprojects.collect {
-		file("${it.buildDir}/jacoco/test.exec")
+		file("${it.layout.buildDirectory.get().asFile}/jacoco/test.exec")
 	}))
 
 	sourceDirectories.setFrom(files(subprojects.collect {
@@ -107,7 +106,7 @@ tasks.register("jacocoRootReport", JacocoReport) {
 	}))
 
 	classDirectories.setFrom(files(subprojects.collect {
-		fileTree("${it.buildDir}/classes/java/main") {
+		fileTree("${it.layout.buildDirectory.get().asFile}/classes/java/main") {
 			include '**/application/**'
 		}
 	}))
