@@ -22,14 +22,15 @@ public class MemberController {
      * @return 회원 정보 응답 (MemberRes)
      */
     @PostMapping("/login")
-    public MemberRes login(@RequestParam(name = "provider") String provider) {
+    public MemberRes login(@RequestParam(name = "provider") String provider,
+                           @RequestParam(name = "redirect-uri") String redirectUri) {
         // 회원가입 로직
         if(provider.equals("kakao")) {
             // 카카오 로그인 로직
-            return memberService.loginWithKakao(provider);
+            return memberService.loginWithKakao(provider, redirectUri);
         } else if(provider.equals("google")) {
             // 구글 로그인 로직
-            return memberService.loginWithGoogle(provider);
+            return memberService.loginWithGoogle(provider, redirectUri);
         } else {
             throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
         }

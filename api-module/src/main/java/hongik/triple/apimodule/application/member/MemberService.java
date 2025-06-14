@@ -28,15 +28,15 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
-    public MemberRes loginWithKakao(String code) {
-        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(code, "redirectUri");
+    public MemberRes loginWithKakao(String code, String redirectUri) {
+        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(code, redirectUri);
         KakaoProfile kakaoProfile = kakaoClient.getMemberInfo(kakaoToken);
 
         return register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname());
     }
 
-    public MemberRes loginWithGoogle(String accessToken) {
-        GoogleToken googleToken = googleClient.getGoogleAccessToken(accessToken, "redirectUri");
+    public MemberRes loginWithGoogle(String accessToken, String redirectUri) {
+        GoogleToken googleToken = googleClient.getGoogleAccessToken(accessToken, redirectUri);
         GoogleProfile googleProfile = googleClient.getMemberInfo(googleToken);
 
         return register(googleProfile.email(), googleProfile.name());
