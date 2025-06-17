@@ -9,13 +9,13 @@ import org.hibernate.annotations.SQLDelete;
 @Entity
 @Getter
 @Table(name = "member")
-@SQLDelete(sql = "UPDATE banner SET deleted_at = NOW() where banner_id = ?")
+@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where banner_id = ?")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Member extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long memberId;
     private String name;
     private String email;
     private String memberType;
