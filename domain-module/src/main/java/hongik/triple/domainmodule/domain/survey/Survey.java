@@ -4,6 +4,7 @@ import hongik.triple.commonmodule.enumerate.SkinType;
 import hongik.triple.domainmodule.common.BaseTimeEntity;
 import hongik.triple.domainmodule.domain.member.Member;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -29,6 +30,13 @@ public class Survey extends BaseTimeEntity {
 
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(name = "skin_type", nullable = false)
     private SkinType skinType;
+
+    @Builder
+    public Survey(Member member, Object body, SkinType skinType) {
+        this.member = member;
+        this.body = body;
+        this.skinType = skinType;
+    }
 }
