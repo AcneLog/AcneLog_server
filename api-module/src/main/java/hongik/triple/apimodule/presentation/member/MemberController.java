@@ -1,7 +1,9 @@
 package hongik.triple.apimodule.presentation.member;
 
 import hongik.triple.apimodule.application.member.MemberService;
+import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
+import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +24,15 @@ public class MemberController {
      * @return 회원 정보 응답 (MemberRes)
      */
     @PostMapping("/login")
-    public MemberRes login(@RequestParam(name = "provider") String provider,
-                           @RequestParam(name = "redirect-uri") String redirectUri) {
+    public ApplicationResponse<MemberRes> login(@RequestParam(name = "provider") String provider,
+                                               @RequestParam(name = "redirect-uri") String redirectUri) {
         // 회원가입 로직
         if(provider.equals("kakao")) {
             // 카카오 로그인 로직
-            return memberService.loginWithKakao(provider, redirectUri);
+            return ApplicationResponse.ok(memberService.loginWithKakao(provider, redirectUri));
         } else if(provider.equals("google")) {
             // 구글 로그인 로직
-            return memberService.loginWithGoogle(provider, redirectUri);
+            return ApplicationResponse.ok(memberService.loginWithGoogle(provider, redirectUri));
         } else {
             throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
         }
@@ -39,21 +41,22 @@ public class MemberController {
     @PostMapping("/withdrawal")
     public void withdrawal(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         // 회원탈퇴 로직
+        memberService.withdrawal(principalDetails.getMember());
     }
 
 
     @PostMapping("/logout")
-    public void logout() {
-
+    public void logout(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        memberService.logout();
     }
 
     @PostMapping("/profile")
-    public void getProfile() {
-        // 프로필 조회 로직
+    public void getProfile(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        memberService.getProfile(principalDetails.getMember());
     }
 
     @PatchMapping("/update")
-    public void updateProfile() {
-        // 프로필 수정 로직
+    public void updateProfile(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody MemberReq req) {
+        memberService.updateProfile(principalDetails.getMember(), req);
     }
 }

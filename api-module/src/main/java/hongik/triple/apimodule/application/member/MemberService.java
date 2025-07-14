@@ -48,7 +48,7 @@ public class MemberService {
 
     public MemberRes getProfile(Member member) {
         return MemberRes.builder()
-                .id(member.getId())
+                .id(member.getMemberId())
                 .email(member.getEmail())
                 .name(member.getName())
                 .build();
@@ -60,7 +60,7 @@ public class MemberService {
         Member updateMember = memberRepository.save(member);
 
         return MemberRes.builder()
-                .id(updateMember.getId())
+                .id(updateMember.getMemberId())
                 .email(updateMember.getEmail())
                 .name(updateMember.getName())
                 .build();
@@ -78,7 +78,7 @@ public class MemberService {
         return memberRepository.findByEmail(email)
                 .map(member ->
                         MemberRes.builder()
-                                .id(member.getId())
+                                .id(member.getMemberId())
                                 .email(member.getEmail())
                                 .name(member.getName())
                                 .build())
@@ -86,7 +86,7 @@ public class MemberService {
                     Member newMember = new Member(email, nickname);
                     Member saveMember = memberRepository.save(newMember);
                     return MemberRes.builder()
-                            .id(saveMember.getId())
+                            .id(saveMember.getMemberId())
                             .email(saveMember.getEmail())
                             .name(saveMember.getName())
                             .build();
