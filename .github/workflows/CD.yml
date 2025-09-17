@@ -1,11 +1,16 @@
 name: CD with Gradle
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
 permissions: write-all
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  GITHUB_SHA: ${{ github.sha }}
 
 jobs:
   build:
@@ -45,10 +50,19 @@ jobs:
           echo "${{ secrets.APPLICATION_SECRET }}" > ./application.yml
         shell: bash
 
+      # common yml 반영
+      - name: Make application-common.yml
+        run: |
+           cd ./common-module/src/main/resources
+           touch ./application-common.yml
+           echo "${{ secrets.APPLICATION_COMMON }}" > ./application-common.yml
+        shell: bash
+
       # domain yml 반영
       - name: Make application-domain.yml
         run: |
           cd ./domain-module/src/main/resources
+          touch ./application-domain.yml
           echo "${{ secrets.APPLICATION_DOMAIN }}" > ./application-domain.yml
         shell: bash
 
@@ -56,9 +70,40 @@ jobs:
       - name: Make application-infra.yml
         run: |
           cd ./infra-module/src/main/resources
+          touch ./application-infra.yml
           echo "${{ secrets.APPLICATION_INFRA }}" > ./application-infra .yml
         shell: bash
 
       # Gradle clean bootJar
       - name: Build with Gradle
         run: ./gradlew clean bootJar
+
+      # Login to ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Docker Image Push to ECR and Run container with Image pull from ECR
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ env.GITHUB_SHA }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # Docker Container Deploy to EC2
+      - name: Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_SERVER_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.GITHUB_SHA }}
+            docker tag ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.GITHUB_SHA }} ${{ secrets.DOCKER_IMAGE_NAME }}
+            docker stop acnelog-server || true
+            docker rm acnelog-server || true
+            docker run -d --name acnelog-server -p 8080:8080 ${{ secrets.DOCKER_IMAGE_NAME }}

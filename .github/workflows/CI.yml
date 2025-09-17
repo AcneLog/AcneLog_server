@@ -7,6 +7,11 @@ on:
 
 permissions: write-all
 
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  GITHUB_SHA: ${{ github.sha }}
+
 jobs:
   build:
     # ubuntu 버전 지정
@@ -37,7 +42,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # api yml 반영
+        # api yml 반영
       - name: Make application.yml
         run: |
           cd ./api-module/src/main/resources
@@ -45,10 +50,19 @@ jobs:
           echo "${{ secrets.APPLICATION_SECRET }}" > ./application.yml
         shell: bash
 
+      # common yml 반영
+      - name: Make application-common.yml
+        run: |
+          cd ./common-module/src/main/resources
+          touch ./application-common.yml
+          echo "${{ secrets.APPLICATION_COMMON }}" > ./application-common.yml
+        shell: bash
+
       # domain yml 반영
       - name: Make application-domain.yml
         run: |
           cd ./domain-module/src/main/resources
+          touch ./application-domain.yml
           echo "${{ secrets.APPLICATION_DOMAIN }}" > ./application-domain.yml
         shell: bash
 
@@ -56,6 +70,7 @@ jobs:
       - name: Make application-infra.yml
         run: |
           cd ./infra-module/src/main/resources
+          touch ./application-infra.yml
           echo "${{ secrets.APPLICATION_INFRA }}" > ./application-infra .yml
         shell: bash
 
