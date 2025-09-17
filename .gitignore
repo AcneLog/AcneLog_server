@@ -41,3 +41,4 @@ application.yml
 application-common.yml
 application-domain.yml
 application-infra.yml
+application-domain-production.yml
