@@ -71,7 +71,7 @@ jobs:
         run: |
           cd ./infra-module/src/main/resources
           touch ./application-infra.yml
-          echo "${{ secrets.APPLICATION_INFRA }}" > ./application-infra .yml
+          echo "${{ secrets.APPLICATION_INFRA }}" > ./application-infra.yml
         shell: bash
 
       # Gradle clean bootJar
