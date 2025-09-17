@@ -1,3 +1,4 @@
+bootJar { enabled = true }
 jar { enabled = false }
 
 springBoot {

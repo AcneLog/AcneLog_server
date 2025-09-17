@@ -19,4 +19,31 @@ public class SurveyService {
         // Response
         return new SurveyRes(); // Replace with actual response data
     }
+
+    public SurveyRes getSurveyQuestions() {
+        // Validation
+
+        // Business Logic
+
+        // Response
+        return new SurveyRes(); // Replace with actual response data
+    }
+
+    public SurveyRes getSurveyList() {
+        // Validation
+
+        // Business Logic
+
+        // Response
+        return new SurveyRes(); // Replace with actual response data
+    }
+
+    public SurveyRes getSurveyDetail(Long surveyId) {
+        // Validation
+
+        // Business Logic
+
+        // Response
+        return new SurveyRes(); // Replace with actual response data
+    }
 }
