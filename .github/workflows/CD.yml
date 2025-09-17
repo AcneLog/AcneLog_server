@@ -9,7 +9,7 @@ permissions: write-all
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
   GITHUB_SHA: ${{ github.sha }}
 
 jobs:
@@ -76,7 +76,7 @@ jobs:
 
       # Gradle clean bootJar
       - name: Build with Gradle
-        run: ./gradlew clean bootJar
+        run: ./gradlew clean api-module:bootJar
 
       # Login to ECR
       - name: Login to Amazon ECR

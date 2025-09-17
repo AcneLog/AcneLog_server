@@ -76,4 +76,4 @@ jobs:
 
       # Gradle clean bootJar
       - name: Build with Gradle
-        run: ./gradlew clean bootJar
+        run: ./gradlew clean api-module:bootJar
