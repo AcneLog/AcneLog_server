@@ -78,10 +78,20 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean api-module:bootJar
 
+      # Configure AWS Credentials by using IAM inform
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5.0.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       # Login to ECR
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: 'false'
 
       # Docker Image Push to ECR and Run container with Image pull from ECR
       - name: Build, tag, and push image to Amazon ECR
