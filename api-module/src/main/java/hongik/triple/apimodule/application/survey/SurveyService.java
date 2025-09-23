@@ -99,9 +99,22 @@ public class SurveyService {
     private void validateSurveyAnswers(Map<String, Object> answers) {
         List<SurveyQuestionDto> questions = buildSurveyQuestions();
 
+        // 12개 필수 문항 확인
         for (SurveyQuestionDto question : questions) {
-            if (question.isRequired() && !answers.containsKey(question.getQuestionId())) {
-                throw new IllegalArgumentException("필수 질문에 대한 답변이 없습니다: " + question.getQuestionText());
+            if (question.required() && !answers.containsKey(question.questionId())) {
+                throw new IllegalArgumentException("필수 질문에 대한 답변이 없습니다: " + question.questionText());
+            }
+        }
+
+        // 점수 범위 검증 (1-5)
+        for (Map.Entry<String, Object> entry : answers.entrySet()) {
+            try {
+                int score = Integer.parseInt(entry.getValue().toString());
+                if (score < 1 || score > 5) {
+                    throw new IllegalArgumentException("점수는 1-5 범위여야 합니다: " + entry.getKey());
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("유효하지 않은 점수 형식입니다: " + entry.getKey());
             }
         }
     }
@@ -126,20 +139,20 @@ public class SurveyService {
         double averageScore = answerCount > 0 ? (double) totalScore / answerCount : 0;
 
         // 특정 문항들의 가중치를 고려한 세부 판단
-        int inflammationScore = getInflammationRelatedScore(answers); // Q003, Q004, Q007, Q008
         int comedoneScore = getComedoneRelatedScore(answers); // Q001, Q002, Q005, Q006
+        int inflammationScore = getInflammationRelatedScore(answers); // Q003, Q004, Q007, Q008
         int pustuleScore = getPustuleRelatedScore(answers); // Q009, Q010
         int folliculitisScore = getFolliculitisRelatedScore(answers); // Q011, Q012
 
-        // 점수 기반 피부 타입 결정
+        // 점수 기반 피부 타입 결정 (심각도 순으로 우선순위)
         if (averageScore <= 2.0) {
             return SkinType.NORMAL;
-        } else if (inflammationScore >= 15) { // 염증성 문항 평균 4점 이상
-            return SkinType.PAPULES;
-        } else if (pustuleScore >= 8) { // 화농성 문항 평균 4점 이상
-            return SkinType.PUSTULES;
         } else if (folliculitisScore >= 8) { // 모낭염 문항 평균 4점 이상
             return SkinType.FOLLICULITIS;
+        } else if (pustuleScore >= 8) { // 화농성 문항 평균 4점 이상
+            return SkinType.PUSTULES;
+        } else if (inflammationScore >= 15) { // 염증성 문항 평균 3.75점 이상
+            return SkinType.PAPULES;
         } else if (comedoneScore >= 12) { // 좁쌀 문항 평균 3점 이상
             return SkinType.COMEDONES;
         } else {
@@ -148,46 +161,65 @@ public class SurveyService {
     }
 
     private int calculateQuestionScore(String questionId, Object answer) {
-        // 질문별 점수 계산 로직
-        switch (questionId) {
-            case "Q001": // 세안 후 피부 상태
-                return getScaleScore(answer, 5); // 1-5 척도
-            case "Q002": // 하루 종일 피부 느낌
-                return getMultipleChoiceScore(answer, Map.of(
-                        "very_oily", 1,
-                        "slightly_oily", 2,
-                        "normal", 3,
-                        "slightly_dry", 4,
-                        "very_dry", 5
-                ));
-            case "Q003": // T존 상태
-                return getScaleScore(answer, 5);
-            case "Q004": // 모공 크기
-                return getMultipleChoiceScore(answer, Map.of(
-                        "very_large", 1,
-                        "large", 2,
-                        "medium", 3,
-                        "small", 4,
-                        "very_small", 5
-                ));
-            case "Q005": // 트러블 빈도
-                return getScaleScore(answer, 5);
-            default:
-                return 0;
-        }
-    }
-
-    private int getScaleScore(Object answer, int maxScale) {
+        // 모든 질문이 1-5 척도로 통일
         try {
             int score = Integer.parseInt(answer.toString());
-            return Math.min(Math.max(score, 1), maxScale);
+            return Math.min(Math.max(score, 1), 5);
         } catch (NumberFormatException e) {
-            return 1;
+            return 1; // 기본값
         }
     }
 
-    private int getMultipleChoiceScore(Object answer, Map<String, Integer> scoreMap) {
-        return scoreMap.getOrDefault(answer.toString(), 1);
+    private int getComedoneRelatedScore(Map<String, Object> answers) {
+        // 좁쌀여드름 관련 문항 (Q001, Q002, Q005, Q006)
+        String[] comedoneQuestions = {"Q001", "Q002", "Q005", "Q006"};
+        int totalScore = 0;
+
+        for (String questionId : comedoneQuestions) {
+            if (answers.containsKey(questionId)) {
+                totalScore += calculateQuestionScore(questionId, answers.get(questionId));
+            }
+        }
+        return totalScore;
+    }
+
+    private int getInflammationRelatedScore(Map<String, Object> answers) {
+        // 염증성 여드름 관련 문항 (Q003, Q004, Q007, Q008)
+        String[] inflammationQuestions = {"Q003", "Q004", "Q007", "Q008"};
+        int totalScore = 0;
+
+        for (String questionId : inflammationQuestions) {
+            if (answers.containsKey(questionId)) {
+                totalScore += calculateQuestionScore(questionId, answers.get(questionId));
+            }
+        }
+        return totalScore;
+    }
+
+    private int getPustuleRelatedScore(Map<String, Object> answers) {
+        // 화농성 여드름 관련 문항 (Q009, Q010)
+        String[] pustuleQuestions = {"Q009", "Q010"};
+        int totalScore = 0;
+
+        for (String questionId : pustuleQuestions) {
+            if (answers.containsKey(questionId)) {
+                totalScore += calculateQuestionScore(questionId, answers.get(questionId));
+            }
+        }
+        return totalScore;
+    }
+
+    private int getFolliculitisRelatedScore(Map<String, Object> answers) {
+        // 모낭염 관련 문항 (Q011, Q012)
+        String[] folliculitisQuestions = {"Q011", "Q012"};
+        int totalScore = 0;
+
+        for (String questionId : folliculitisQuestions) {
+            if (answers.containsKey(questionId)) {
+                totalScore += calculateQuestionScore(questionId, answers.get(questionId));
+            }
+        }
+        return totalScore;
     }
 
     private Map<String, Object> processSurveyBody(Map<String, Object> answers) {
@@ -205,48 +237,70 @@ public class SurveyService {
             processedBody.put(questionId, questionResult);
         }
 
+        // 카테고리별 점수도 함께 저장
+        Map<String, Object> categoryScores = new HashMap<>();
+        categoryScores.put("comedoneScore", getComedoneRelatedScore(answers));
+        categoryScores.put("inflammationScore", getInflammationRelatedScore(answers));
+        categoryScores.put("pustuleScore", getPustuleRelatedScore(answers));
+        categoryScores.put("folliculitisScore", getFolliculitisRelatedScore(answers));
+
+        processedBody.put("categoryScores", categoryScores);
+
         return processedBody;
     }
 
     private int calculateTotalScore(Map<String, Object> body) {
-        return body.values().stream()
-                .mapToInt(value -> {
-                    if (value instanceof Map) {
-                        Map<String, Object> questionResult = (Map<String, Object>) value;
-                        return (Integer) questionResult.getOrDefault("score", 0);
-                    }
-                    return 0;
-                })
-                .sum();
+        int totalScore = 0;
+
+        for (Map.Entry<String, Object> entry : body.entrySet()) {
+            // categoryScores는 제외
+            if (entry.getKey().equals("categoryScores")) {
+                continue;
+            }
+
+            Object value = entry.getValue();
+            if (value instanceof Map) {
+                Map<String, Object> questionResult = (Map<String, Object>) value;
+                Object scoreObj = questionResult.get("score");
+                if (scoreObj instanceof Integer) {
+                    totalScore += (Integer) scoreObj;
+                }
+            }
+        }
+
+        return totalScore;
     }
 
     private String generateRecommendation(SkinType skinType) {
         switch (skinType) {
-            case DRY:
-                return "보습에 중점을 둔 스킨케어를 추천합니다.";
-            case OILY:
-                return "유분 조절과 모공 관리에 집중하세요.";
-            case COMBINATION:
-                return "부위별 맞춤 케어가 필요합니다.";
             case NORMAL:
-                return "현재 상태를 유지하는 기본 케어를 권장합니다.";
+                return "현재 피부 상태가 양호합니다. 기본적인 세안과 보습 관리를 지속하시고, 자외선 차단제를 꾸준히 사용하세요.";
+            case COMEDONES:
+                return "좁쌀여드름이 있습니다. BHA나 살리실산 성분의 각질 제거 제품을 사용하고, 논코메도제닉 제품으로 모공 관리에 집중하세요.";
+            case PUSTULES:
+                return "화농성 여드름이 있습니다. 벤조일 퍼옥사이드나 항생제 성분이 포함된 제품을 사용하고, 피부과 전문의 상담을 받아보세요.";
+            case PAPULES:
+                return "염증성 여드름이 있습니다. 자극적인 제품 사용을 피하고 니아신아마이드, 아젤라산 등의 진정 성분으로 관리하며, 피부과 치료를 권장합니다.";
+            case FOLLICULITIS:
+                return "모낭염이 의심됩니다. 면도 후 항균 토너를 사용하고, 청결한 관리와 함께 피부과 전문의 진료를 받으시기 바랍니다.";
             default:
-                return "전문가와 상담을 받아보세요.";
+                return "정확한 진단을 위해 피부과 전문의와 상담을 받아보세요.";
         }
     }
 
     private List<SurveyQuestionDto> buildSurveyQuestions() {
         return Arrays.asList(
+                // 좁쌀여드름 관련 문항 (Q001-Q002, Q005-Q006)
                 new SurveyQuestionDto(
                         "Q001",
-                        "세안 후 아무것도 바르지 않았을 때 피부 상태는?",
+                        "얼굴에 작고 하얀 좁쌀 같은 것들이 얼마나 많이 있나요?",
                         "SCALE",
                         Arrays.asList(
-                                new SurveyOptionDto("1", "매우 건조함", 5),
-                                new SurveyOptionDto("2", "약간 건조함", 4),
+                                new SurveyOptionDto("1", "전혀 없음", 1),
+                                new SurveyOptionDto("2", "가끔 보임", 2),
                                 new SurveyOptionDto("3", "보통", 3),
-                                new SurveyOptionDto("4", "약간 기름짐", 2),
-                                new SurveyOptionDto("5", "매우 기름짐", 1)
+                                new SurveyOptionDto("4", "자주 보임", 4),
+                                new SurveyOptionDto("5", "매우 많음", 5)
                         ),
                         true,
                         1
@@ -254,29 +308,30 @@ public class SurveyService {
 
                 new SurveyQuestionDto(
                         "Q002",
-                        "하루 종일 피부가 어떤 느낌인가요?",
-                        "MULTIPLE_CHOICE",
+                        "T존(이마, 코) 부위에 블랙헤드나 화이트헤드가 얼마나 많나요?",
+                        "SCALE",
                         Arrays.asList(
-                                new SurveyOptionDto("very_oily", "하루종일 매우 기름짐", 1),
-                                new SurveyOptionDto("slightly_oily", "오후부터 기름짐", 2),
-                                new SurveyOptionDto("normal", "적당함", 3),
-                                new SurveyOptionDto("slightly_dry", "약간 당김", 4),
-                                new SurveyOptionDto("very_dry", "하루종일 매우 건조함", 5)
+                                new SurveyOptionDto("1", "전혀 없음", 1),
+                                new SurveyOptionDto("2", "조금 있음", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "많이 있음", 4),
+                                new SurveyOptionDto("5", "매우 많음", 5)
                         ),
                         true,
                         2
                 ),
 
+                // 염증성여드름 관련 문항 (Q003-Q004, Q007-Q008)
                 new SurveyQuestionDto(
                         "Q003",
-                        "T존(이마, 코) 부위의 기름기 정도는?",
+                        "빨갛고 부어오른 여드름이 얼마나 자주 생기나요?",
                         "SCALE",
                         Arrays.asList(
-                                new SurveyOptionDto("1", "전혀 기름지지 않음", 5),
-                                new SurveyOptionDto("2", "약간 기름짐", 4),
+                                new SurveyOptionDto("1", "거의 생기지 않음", 1),
+                                new SurveyOptionDto("2", "가끔 생김", 2),
                                 new SurveyOptionDto("3", "보통", 3),
-                                new SurveyOptionDto("4", "많이 기름짐", 2),
-                                new SurveyOptionDto("5", "매우 기름짐", 1)
+                                new SurveyOptionDto("4", "자주 생김", 4),
+                                new SurveyOptionDto("5", "항상 있음", 5)
                         ),
                         true,
                         3
@@ -284,14 +339,14 @@ public class SurveyService {
 
                 new SurveyQuestionDto(
                         "Q004",
-                        "모공 크기는 어느 정도인가요?",
-                        "MULTIPLE_CHOICE",
+                        "여드름 부위에 통증이나 압통이 얼마나 심한가요?",
+                        "SCALE",
                         Arrays.asList(
-                                new SurveyOptionDto("very_large", "매우 큼", 1),
-                                new SurveyOptionDto("large", "큼", 2),
-                                new SurveyOptionDto("medium", "보통", 3),
-                                new SurveyOptionDto("small", "작음", 4),
-                                new SurveyOptionDto("very_small", "매우 작음", 5)
+                                new SurveyOptionDto("1", "전혀 아프지 않음", 1),
+                                new SurveyOptionDto("2", "살짝 아픔", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "많이 아픔", 4),
+                                new SurveyOptionDto("5", "매우 아픔", 5)
                         ),
                         true,
                         4
@@ -299,17 +354,124 @@ public class SurveyService {
 
                 new SurveyQuestionDto(
                         "Q005",
-                        "트러블(여드름, 뾰루지)이 얼마나 자주 생기나요?",
+                        "턱이나 입 주변에 작은 돌기들이 얼마나 많이 있나요?",
                         "SCALE",
                         Arrays.asList(
-                                new SurveyOptionDto("1", "거의 생기지 않음", 5),
-                                new SurveyOptionDto("2", "가끔 생김", 4),
+                                new SurveyOptionDto("1", "전혀 없음", 1),
+                                new SurveyOptionDto("2", "조금 있음", 2),
                                 new SurveyOptionDto("3", "보통", 3),
-                                new SurveyOptionDto("4", "자주 생김", 2),
-                                new SurveyOptionDto("5", "항상 생김", 1)
+                                new SurveyOptionDto("4", "많이 있음", 4),
+                                new SurveyOptionDto("5", "매우 많음", 5)
                         ),
                         true,
                         5
+                ),
+
+                new SurveyQuestionDto(
+                        "Q006",
+                        "모공이 막힌 느낌이나 피부가 거칠어진 느낌이 얼마나 드나요?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "전혀 없음", 1),
+                                new SurveyOptionDto("2", "가끔 있음", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 있음", 4),
+                                new SurveyOptionDto("5", "항상 있음", 5)
+                        ),
+                        true,
+                        6
+                ),
+
+                new SurveyQuestionDto(
+                        "Q007",
+                        "여드름이 생긴 후 자국이나 흉터가 남는 정도는?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "전혀 남지 않음", 1),
+                                new SurveyOptionDto("2", "가끔 남음", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 남음", 4),
+                                new SurveyOptionDto("5", "항상 남음", 5)
+                        ),
+                        true,
+                        7
+                ),
+
+                new SurveyQuestionDto(
+                        "Q008",
+                        "여드름 주변 피부가 빨갛게 되는 정도는?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "전혀 빨갛지 않음", 1),
+                                new SurveyOptionDto("2", "약간 빨감", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "많이 빨감", 4),
+                                new SurveyOptionDto("5", "매우 빨감", 5)
+                        ),
+                        true,
+                        8
+                ),
+
+                // 화농성여드름 관련 문항 (Q009-Q010)
+                new SurveyQuestionDto(
+                        "Q009",
+                        "고름이 찬 여드름(노란 고름이 보이는)이 얼마나 자주 생기나요?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "거의 생기지 않음", 1),
+                                new SurveyOptionDto("2", "가끔 생김", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 생김", 4),
+                                new SurveyOptionDto("5", "항상 있음", 5)
+                        ),
+                        true,
+                        9
+                ),
+
+                new SurveyQuestionDto(
+                        "Q010",
+                        "여드름에서 고름이나 분비물이 나오는 경우가 얼마나 많나요?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "전혀 없음", 1),
+                                new SurveyOptionDto("2", "가끔 있음", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 있음", 4),
+                                new SurveyOptionDto("5", "항상 있음", 5)
+                        ),
+                        true,
+                        10
+                ),
+
+                // 모낭염 관련 문항 (Q011-Q012)
+                new SurveyQuestionDto(
+                        "Q011",
+                        "털이 있는 부위(턱수염, 구레나룻 등)에 빨간 돌기나 염증이 얼마나 자주 생기나요?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "거의 생기지 않음", 1),
+                                new SurveyOptionDto("2", "가끔 생김", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 생김", 4),
+                                new SurveyOptionDto("5", "항상 있음", 5)
+                        ),
+                        true,
+                        11
+                ),
+
+                new SurveyQuestionDto(
+                        "Q012",
+                        "면도나 제모 후 빨간 반점이나 염증이 생기는 정도는?",
+                        "SCALE",
+                        Arrays.asList(
+                                new SurveyOptionDto("1", "전혀 생기지 않음", 1),
+                                new SurveyOptionDto("2", "가끔 생김", 2),
+                                new SurveyOptionDto("3", "보통", 3),
+                                new SurveyOptionDto("4", "자주 생김", 4),
+                                new SurveyOptionDto("5", "항상 생김", 5)
+                        ),
+                        true,
+                        12
                 )
         );
     }
