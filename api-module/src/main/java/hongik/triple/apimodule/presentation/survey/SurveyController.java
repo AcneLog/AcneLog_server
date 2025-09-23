@@ -11,6 +11,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,12 +45,12 @@ public class SurveyController {
     }
 
     @GetMapping("/list")
-    public ApplicationResponse<?> getSurveyList() {
-        return ApplicationResponse.ok(surveyService.getSurveyList());
+    public ApplicationResponse<?> getSurveyList(@AuthenticationPrincipal UserDetails userDetails, @PageableDefault Pageable pageable) {
+        return ApplicationResponse.ok(surveyService.getSurveyList(1L,  pageable)); // TODO: userDetails -> memberId 추출
     }
 
     @GetMapping("/detail/{surveyId}")
-    public ApplicationResponse<?> getSurveyDetail(Long surveyId) {
+    public ApplicationResponse<?> getSurveyDetail(@PathVariable(name = "surveyId") Long surveyId) {
         return ApplicationResponse.ok(surveyService.getSurveyDetail(surveyId));
     }
 }
