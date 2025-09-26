@@ -3,6 +3,7 @@ jar { enabled = false }
 
 springBoot {
     mainClass =  'hongik.triple.apimodule.ApiModuleApplication'
+    buildInfo()
 }
 
 dependencies {

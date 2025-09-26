@@ -2,6 +2,7 @@ package hongik.triple.apimodule.presentation.survey;
 
 import hongik.triple.apimodule.application.survey.SurveyService;
 import hongik.triple.apimodule.global.common.ApplicationResponse;
+import hongik.triple.commonmodule.dto.survey.SurveyReq;
 import hongik.triple.commonmodule.dto.survey.SurveyRes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,10 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/survey")
@@ -38,17 +40,17 @@ public class SurveyController {
     }
 
     @PostMapping("/response")
-    public ApplicationResponse<?> registerSurvey() {
-        return ApplicationResponse.ok(surveyService.registerSurvey());
+    public ApplicationResponse<?> registerSurvey(@RequestBody SurveyReq request) {
+        return ApplicationResponse.ok(surveyService.registerSurvey(request));
     }
 
     @GetMapping("/list")
-    public ApplicationResponse<?> getSurveyList() {
-        return ApplicationResponse.ok(surveyService.getSurveyList());
+    public ApplicationResponse<?> getSurveyList(@AuthenticationPrincipal UserDetails userDetails, @PageableDefault Pageable pageable) {
+        return ApplicationResponse.ok(surveyService.getSurveyList(1L,  pageable)); // TODO: userDetails -> memberId 추출
     }
 
     @GetMapping("/detail/{surveyId}")
-    public ApplicationResponse<?> getSurveyDetail(Long surveyId) {
+    public ApplicationResponse<?> getSurveyDetail(@PathVariable(name = "surveyId") Long surveyId) {
         return ApplicationResponse.ok(surveyService.getSurveyDetail(surveyId));
     }
 }
