@@ -5,7 +5,11 @@ on:
     branches:
       - main
 
-permissions: write-all
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -74,6 +78,42 @@ jobs:
           echo "${{ secrets.APPLICATION_INFRA }}" > ./application-infra.yml
         shell: bash
 
-      # Gradle clean bootJar
+      # clean과 test를 한 번에 실행
+      - name: Test with Gradle
+        run: ./gradlew clean test
+
+      # Jacoco 통합 리포트 생성 후 업로드
+      - name: Generate Jacoco Root Report
+        run: ./gradlew jacocoRootReport
+        if: always()
+
+      # bootJar 실행해서 jar 파일 생성 여부 확인
       - name: Build with Gradle
-        run: ./gradlew clean api-module:bootJar
+        run: ./gradlew api-module:bootJar
+
+      # Test 결과 업로드
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/build/test-results/test/TEST-*.xml'
+
+      - name: JUnit Report Action
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+
+      - name: Report test Coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.6.1
+        if: always()
+        continue-on-error: true # 실패해도 다음 단계 진행 (TODO: 커버리지 기준 충족 못할 시 실패 처리로 변경 예정)
+        with:
+          title: 📝 Test Coverage Report
+          paths: |
+            ${{ github.workspace }}/build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 70
+          min-coverage-changed-files: 70
+          update-comment: true
