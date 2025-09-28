@@ -12,7 +12,6 @@ import hongik.triple.inframodule.oauth.kakao.KakaoProfile;
 import hongik.triple.inframodule.oauth.kakao.KakaoToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -24,11 +23,11 @@ public class MemberService {
     private final KakaoClient kakaoClient;
     private final GoogleClient googleClient;
 
-    public String getKakaoLoginUrl(String redirectUri) {
-        return kakaoClient.getKakaoAuthUrl(redirectUri);
+    public String getKakaoLoginUrl() {
+        return kakaoClient.getKakaoAuthUrl();
     }
 
-    public String getGoogleLoginUrl(String redirectUri) {
+    public String getGoogleLoginUrl() {
         return ""; // TODO: 추후 구현 예정
     }
 

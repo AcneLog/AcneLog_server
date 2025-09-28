@@ -33,7 +33,7 @@ public class KakaoClient {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String kakaoRedirectUri;
 
-    public String getKakaoAuthUrl(String redirectUri) {
+    public String getKakaoAuthUrl() {
         return "https://kauth.kakao.com/oauth/authorize?client_id=" + kakaoClientId +
                 "&redirect_uri=" + kakaoRedirectUri +
                 "&response_type=code";

@@ -24,18 +24,17 @@ public class MemberController {
 
     @GetMapping("/auth/login")
     public ResponseEntity<?> redirectLoginPage(
-            @RequestParam(name = "provider") String provider,
-            @RequestParam(name = "redirect-uri", required = false) String redirectUri) {
+            @RequestParam(name = "provider") String provider) {
         // 회원가입 로직
         if(provider.equals("kakao")) {
             // 카카오 로그인 로직
-            String kakaoAuthUrl = memberService.getKakaoLoginUrl(redirectUri);
+            String kakaoAuthUrl = memberService.getKakaoLoginUrl();
             HttpHeaders headers = new HttpHeaders();
             headers.add("Location", kakaoAuthUrl);
             return new ResponseEntity<>(headers, HttpStatus.FOUND);
         } else if(provider.equals("google")) {
             // 구글 로그인 로직
-            String googleAuthUrl = memberService.getGoogleLoginUrl(redirectUri);
+            String googleAuthUrl = memberService.getGoogleLoginUrl();
             HttpHeaders headers = new HttpHeaders();
             headers.add("Location", googleAuthUrl);
             return new ResponseEntity<>(headers, HttpStatus.FOUND);
