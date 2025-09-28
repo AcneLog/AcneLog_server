@@ -16,8 +16,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         AcneLogInfraRoot.class,
         ApiModuleApplication.class
 })
-@EntityScan(basePackages = "hongik.triple.domainmodule") // 도메인 모듈의 엔티티 경로
-@EnableJpaRepositories(basePackages = "hongik.triple.domainmodule") // 도메인 모듈의 레포지토리 경로
 public class ApiModuleApplication {
 
     public static void main(String[] args) {
