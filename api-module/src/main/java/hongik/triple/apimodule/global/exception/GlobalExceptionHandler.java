@@ -32,6 +32,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> runtimeException(RuntimeException e) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(ErrorCode.INTERNAL_SERVER_EXCEPTION));
+                .body(new ErrorResponse(e.getMessage()));
     }
 }
