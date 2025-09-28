@@ -1,4 +1,5 @@
 package hongik.triple.commonmodule.dto.analysis;
 
-public record AnalysisRes() {
+public record AnalysisRes(
+) {
 }

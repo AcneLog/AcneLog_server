@@ -1,33 +1,45 @@
 package hongik.triple.inframodule.ai;
 
-import lombok.RequiredArgsConstructor;
+import hongik.triple.commonmodule.dto.analysis.AnalysisData;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 @Component
 public class AIClient {
 
     private final WebClient webClient;
 
-    public AIClient(WebClient.Builder webClientBuilder) {
+    /**
+     * WebClient를 사용하여 FastAPI 서버와 통신
+     *
+     * @param webClientBuilder WebClient 빌더
+     * @param baseUrl FastAPI 서버의 URL (application-infra.yml 에서 주입)
+     */
+    public AIClient(WebClient.Builder webClientBuilder,
+                    @Value("${ai.server-url}") String baseUrl) {
+        System.out.println("AIClient initialized with baseUrl: " + baseUrl);
         this.webClient = webClientBuilder
-                .baseUrl("https://api.example.com") // AI 모델의 기본 URL 설정
+                .baseUrl(baseUrl) // 환경설정 값 사용
                 .build();
     }
 
     /**
-     * AI 모델에 요청을 보내고 응답을 받는 메서드
+     * FastAPI 서버로 이미지 전송 후 예측 결과 받기
      *
-     * @param requestBody 요청 본문
-     * @return AI 모델의 응답
+     * @param file 업로드할 이미지 파일
+     * @return FastAPI 모델의 JSON 응답
      */
-    public String sendRequest(String requestBody) {
+    public AnalysisData sendPredictRequest(MultipartFile file) {
         return webClient.post()
-                .uri("/ai-endpoint") // AI 모델의 엔드포인트 URI
-                .bodyValue(requestBody)
+                .uri("/predict")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData("file", file.getResource()))
                 .retrieve()
-                .bodyToMono(String.class)
-                .block(); // 블로킹 방식으로 응답을 기다림
+                .bodyToMono(AnalysisData.class)
+                .block();
     }
 }
