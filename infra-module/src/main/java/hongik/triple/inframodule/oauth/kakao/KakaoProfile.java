@@ -1,8 +1,6 @@
 package hongik.triple.inframodule.oauth.kakao;
 
 public record KakaoProfile(
-        // 2023년 12월까지 없었던 것으로 보이는 데이터인데, 현재 계속 조회됨. (포럼에 문의된 상황)
-        Boolean setPrivacyInfo,
         Long id,
         String connected_at,
         Properties properties,

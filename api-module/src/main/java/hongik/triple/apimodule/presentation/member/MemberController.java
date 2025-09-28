@@ -5,58 +5,90 @@ import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
 import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
+import hongik.triple.inframodule.oauth.kakao.KakaoProfile;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/member")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Tag(name = "Member", description = "회원 관련 API")
 public class MemberController {
 
     private final MemberService memberService;
 
-    /**
-     * 로그인/회원가입 API - OAuth2 제공자에 따라 진행되며, 기존 로그인 정보 유무에 따라 회원가입 또는 로그인 처리
-     * @param provider OAuth2 제공자 (예: kakao, google 등)
-     * @return 회원 정보 응답 (MemberRes)
-     */
-    @PostMapping("/login")
-    public ApplicationResponse<MemberRes> login(@RequestParam(name = "provider") String provider,
-                                               @RequestParam(name = "redirect-uri") String redirectUri) {
+    @GetMapping("/auth/login")
+    public ResponseEntity<?> redirectLoginPage(
+            @RequestParam(name = "provider") String provider,
+            @RequestParam(name = "redirect-uri", required = false) String redirectUri) {
         // 회원가입 로직
         if(provider.equals("kakao")) {
             // 카카오 로그인 로직
-            return ApplicationResponse.ok(memberService.loginWithKakao(provider, redirectUri));
+            String kakaoAuthUrl = memberService.getKakaoLoginUrl(redirectUri);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Location", kakaoAuthUrl);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
         } else if(provider.equals("google")) {
             // 구글 로그인 로직
-            return ApplicationResponse.ok(memberService.loginWithGoogle(provider, redirectUri));
+            String googleAuthUrl = memberService.getGoogleLoginUrl(redirectUri);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Location", googleAuthUrl);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
         } else {
             throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
         }
     }
 
-    @PostMapping("/withdrawal")
-    public void withdrawal(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    /**
+     * 카카오 로그인/회원가입 API - 기존 로그인 정보 유무에 따라 회원가입 또는 로그인 처리
+     * @return 회원 정보 응답 (MemberRes)
+     */
+    @GetMapping("/auth/kakao/login")
+    public ApplicationResponse<MemberRes> loginWithKakao(
+            @RequestParam(name = "code") String authorizationCode) {
+        KakaoProfile kakaoProfile = memberService.loginWithKakao(authorizationCode);
+        return ApplicationResponse.ok(memberService.register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname()));
+    }
+
+    /**
+     * 구글 로그인/회원가입 API - 기존 로그인 정보 유무에 따라 회원가입 또는 로그인 처리
+     * @return 회원 정보 응답 (MemberRes)
+     */
+    @PostMapping("/auth/google/login")
+    public ApplicationResponse<MemberRes> loginWithGoogle(
+            @RequestParam(name = "code") String authorizationCode) {
+        return ApplicationResponse.ok(memberService.loginWithGoogle(authorizationCode));
+    }
+
+    @PostMapping("/member/withdrawal")
+    public void withdrawal(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         // 회원탈퇴 로직
         memberService.withdrawal(principalDetails.getMember());
     }
 
 
-    @PostMapping("/logout")
-    public void logout(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    @PostMapping("/member/logout")
+    public void logout(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         memberService.logout();
     }
 
-    @PostMapping("/profile")
-    public void getProfile(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    @PostMapping("/member/profile")
+    public void getProfile(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         memberService.getProfile(principalDetails.getMember());
     }
 
-    @PatchMapping("/update")
-    public void updateProfile(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody MemberReq req) {
+    @PatchMapping("/member/update")
+    public void updateProfile(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @RequestBody MemberReq req) {
         memberService.updateProfile(principalDetails.getMember(), req);
     }
 }
