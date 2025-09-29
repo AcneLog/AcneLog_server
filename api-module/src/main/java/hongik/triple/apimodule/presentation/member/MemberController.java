@@ -5,6 +5,7 @@ import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
 import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
+import hongik.triple.inframodule.oauth.google.GoogleProfile;
 import hongik.triple.inframodule.oauth.kakao.KakaoProfile;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -58,10 +59,11 @@ public class MemberController {
      * 구글 로그인/회원가입 API - 기존 로그인 정보 유무에 따라 회원가입 또는 로그인 처리
      * @return 회원 정보 응답 (MemberRes)
      */
-    @PostMapping("/auth/google/login")
+    @GetMapping("/auth/google/login")
     public ApplicationResponse<MemberRes> loginWithGoogle(
             @RequestParam(name = "code") String authorizationCode) {
-        return ApplicationResponse.ok(memberService.loginWithGoogle(authorizationCode));
+        GoogleProfile googleProfile = memberService.loginWithGoogle(authorizationCode);
+        return ApplicationResponse.ok(memberService.register(googleProfile.email(), googleProfile.name()));
     }
 
     @PostMapping("/member/withdrawal")
@@ -70,7 +72,6 @@ public class MemberController {
         // 회원탈퇴 로직
         memberService.withdrawal(principalDetails.getMember());
     }
-
 
     @PostMapping("/member/logout")
     public void logout(

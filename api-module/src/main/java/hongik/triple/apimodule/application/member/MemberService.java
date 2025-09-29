@@ -28,7 +28,7 @@ public class MemberService {
     }
 
     public String getGoogleLoginUrl() {
-        return ""; // TODO: 추후 구현 예정
+        return googleClient.getGoogleAuthUrl();
     }
 
     public KakaoProfile loginWithKakao(String authorizationCode) {
@@ -36,11 +36,9 @@ public class MemberService {
         return kakaoClient.getMemberInfo(kakaoToken);
     }
 
-    public MemberRes loginWithGoogle(String authorizationCode) {
+    public GoogleProfile loginWithGoogle(String authorizationCode) {
         GoogleToken googleToken = googleClient.getGoogleAccessToken(authorizationCode);
-        GoogleProfile googleProfile = googleClient.getMemberInfo(googleToken);
-
-        return register(googleProfile.email(), googleProfile.name());
+        return googleClient.getMemberInfo(googleToken);
     }
 
     @Transactional

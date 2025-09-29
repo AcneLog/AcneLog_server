@@ -30,17 +30,27 @@ public class GoogleClient {
     @Value("${spring.security.oauth2.client.provider.google.user-info-uri}")
     private String googleUserInfoUri;
 
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private String googleRedirectUri;
+
+    public String getGoogleAuthUrl() {
+        return "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + googleClientId +
+                "&redirect_uri=" + googleRedirectUri +
+                "&response_type=code" +
+                "&scope=email profile";
+    }
+
     /**
      * 인가코드 기반으로 Google access token 발급
      */
-    public GoogleToken getGoogleAccessToken(String code, String redirectUri) {
+    public GoogleToken getGoogleAccessToken(String code) {
         WebClient webClient = WebClient.create(googleTokenUri);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", googleGrantType);
         params.add("client_id", googleClientId);
         params.add("client_secret", googleClientSecret);
-        params.add("redirect_uri", redirectUri);
+        params.add("redirect_uri", googleRedirectUri);
         params.add("code", code);
 
         String response = webClient.post()
@@ -76,6 +86,7 @@ public class GoogleClient {
         try {
             return objectMapper.readValue(response, GoogleProfile.class);
         } catch (Exception e) {
+            System.out.println(e);
             throw new RuntimeException("Failed to parse Google profile", e);
         }
     }
