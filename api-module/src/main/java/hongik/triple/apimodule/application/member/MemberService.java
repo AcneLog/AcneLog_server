@@ -1,7 +1,9 @@
 package hongik.triple.apimodule.application.member;
 
+import hongik.triple.apimodule.global.security.jwt.TokenProvider;
 import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
+import hongik.triple.commonmodule.enumerate.MemberType;
 import hongik.triple.domainmodule.domain.member.Member;
 import hongik.triple.domainmodule.domain.member.repository.MemberRepository;
 import hongik.triple.inframodule.oauth.google.GoogleClient;
@@ -22,26 +24,32 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final KakaoClient kakaoClient;
     private final GoogleClient googleClient;
+    private final TokenProvider tokenProvider;
+
+    public String getKakaoLoginUrl(String redirectUri) {
+        return kakaoClient.getKakaoAuthUrl(redirectUri);
+    }
+
+    public String getGoogleLoginUrl(String redirectUri) {
+        return googleClient.getGoogleAuthUrl(redirectUri);
+    }
+
+    public KakaoProfile loginWithKakao(String authorizationCode, String redirectUri) {
+        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(authorizationCode, redirectUri);
+        return kakaoClient.getMemberInfo(kakaoToken);
+    }
+
+    public GoogleProfile loginWithGoogle(String authorizationCode, String redirectUri) {
+        GoogleToken googleToken = googleClient.getGoogleAccessToken(authorizationCode, redirectUri);
+        return googleClient.getMemberInfo(googleToken);
+    }
 
     @Transactional
     public void withdrawal(Member member) {
         memberRepository.delete(member);
     }
 
-    public MemberRes loginWithKakao(String code, String redirectUri) {
-        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(code, redirectUri);
-        KakaoProfile kakaoProfile = kakaoClient.getMemberInfo(kakaoToken);
-
-        return register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname());
-    }
-
-    public MemberRes loginWithGoogle(String accessToken, String redirectUri) {
-        GoogleToken googleToken = googleClient.getGoogleAccessToken(accessToken, redirectUri);
-        GoogleProfile googleProfile = googleClient.getMemberInfo(googleToken);
-
-        return register(googleProfile.email(), googleProfile.name());
-    }
-
+    @Transactional
     public void logout() {
 
     }
@@ -56,7 +64,7 @@ public class MemberService {
 
     @Transactional
     public MemberRes updateProfile(Member member, MemberReq memberReq) {
-        member.update(memberReq.name(), memberReq.skin_type());
+        member.updateSkinType(memberReq.skin_type());
         Member updateMember = memberRepository.save(member);
 
         return MemberRes.builder()
@@ -66,8 +74,9 @@ public class MemberService {
                 .build();
     }
 
-    @Transactional
-    protected MemberRes register(String email, String nickname) {
+    // TODO: DB 회원가입 실패 시, 카카오에서도 회원 가입 실패로 보상 트랜잭션 처리 필요
+    @Transactional // 독립적인 트랜잭션으로 실행, 상위 트랜잭션은 읽기 트랜잭션으로 유지
+    public MemberRes register(String email, String nickname, MemberType memberType) {
         if (email == null || email.isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
@@ -75,21 +84,19 @@ public class MemberService {
             throw new IllegalArgumentException("Nickname cannot be null or empty");
         }
 
-        return memberRepository.findByEmail(email)
-                .map(member ->
-                        MemberRes.builder()
-                                .id(member.getMemberId())
-                                .email(member.getEmail())
-                                .name(member.getName())
-                                .build())
+        Member member = memberRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    Member newMember = new Member(email, nickname);
-                    Member saveMember = memberRepository.save(newMember);
-                    return MemberRes.builder()
-                            .id(saveMember.getMemberId())
-                            .email(saveMember.getEmail())
-                            .name(saveMember.getName())
-                            .build();
+                    Member newMember = new Member(nickname, email, memberType);
+                    return memberRepository.save(newMember);
                 });
+
+        String accessToken = tokenProvider.createToken(member).accessToken();
+
+        return MemberRes.builder()
+                .id(member.getMemberId())
+                .email(member.getEmail())
+                .name(member.getName())
+                .accessToken(accessToken)
+                .build();
     }
 }

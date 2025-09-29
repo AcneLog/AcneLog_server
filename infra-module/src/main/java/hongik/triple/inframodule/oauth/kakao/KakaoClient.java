@@ -30,12 +30,30 @@ public class KakaoClient {
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String kakaoUserInfoUri;
 
+    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
+    private String kakaoRedirectUri;
+
+    public String getKakaoAuthUrl(String redirectUri) {
+        if(redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = kakaoRedirectUri;
+        }
+
+        return "https://kauth.kakao.com/oauth/authorize?client_id=" + kakaoClientId +
+                "&redirect_uri=" + redirectUri +
+                "&response_type=code";
+    }
+
     /**
      * 카카오 서버에 인가코드 기반으로 사용자의 토큰 정보를 조회하는 메소드
      * @param code - 카카오에서 발급해준 인가 코드
      * @return - 카카오에서 반환한 응답 토큰 객체
      */
     public KakaoToken getKakaoAccessToken(String code, String redirectUri) {
+        // 별도의 리다이렉트 요청 URI 설정이 없을 경우, application.yml에 설정된 값 사용
+        if (redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = kakaoRedirectUri;
+        }
+
         // 요청 보낼 객체 기본 생성
         WebClient webClient = WebClient.create(kakaoTokenUri);
 
@@ -86,7 +104,6 @@ public class KakaoClient {
         KakaoProfile kakaoProfile;
         try {
             kakaoProfile = objectMapper.readValue(response, KakaoProfile.class);
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

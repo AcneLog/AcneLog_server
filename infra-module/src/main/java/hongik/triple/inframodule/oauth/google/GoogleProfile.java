@@ -8,5 +8,6 @@ public record GoogleProfile(
         String picture,
         String email,
         boolean email_verified,
-        String locale
+        String locale,
+        String hd  // hosted domain 추가
 ) {}
