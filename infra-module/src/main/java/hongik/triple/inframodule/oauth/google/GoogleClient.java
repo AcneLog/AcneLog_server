@@ -33,9 +33,13 @@ public class GoogleClient {
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String googleRedirectUri;
 
-    public String getGoogleAuthUrl() {
+    public String getGoogleAuthUrl(String redirectUri) {
+        if(redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = googleRedirectUri;
+        }
+
         return "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + googleClientId +
-                "&redirect_uri=" + googleRedirectUri +
+                "&redirect_uri=" + redirectUri +
                 "&response_type=code" +
                 "&scope=email profile";
     }
@@ -43,14 +47,19 @@ public class GoogleClient {
     /**
      * 인가코드 기반으로 Google access token 발급
      */
-    public GoogleToken getGoogleAccessToken(String code) {
+    public GoogleToken getGoogleAccessToken(String code, String redirectUri) {
+        // 별도의 리다이렉트 요청 URI 설정이 없을 경우, application.yml에 설정된 값 사용
+        if (redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = googleRedirectUri;
+        }
+
         WebClient webClient = WebClient.create(googleTokenUri);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", googleGrantType);
         params.add("client_id", googleClientId);
         params.add("client_secret", googleClientSecret);
-        params.add("redirect_uri", googleRedirectUri);
+        params.add("redirect_uri", redirectUri);
         params.add("code", code);
 
         String response = webClient.post()
@@ -86,7 +95,6 @@ public class GoogleClient {
         try {
             return objectMapper.readValue(response, GoogleProfile.class);
         } catch (Exception e) {
-            System.out.println(e);
             throw new RuntimeException("Failed to parse Google profile", e);
         }
     }

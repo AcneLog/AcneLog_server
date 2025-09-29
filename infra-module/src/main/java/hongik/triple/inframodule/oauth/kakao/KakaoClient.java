@@ -33,9 +33,13 @@ public class KakaoClient {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String kakaoRedirectUri;
 
-    public String getKakaoAuthUrl() {
+    public String getKakaoAuthUrl(String redirectUri) {
+        if(redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = kakaoRedirectUri;
+        }
+
         return "https://kauth.kakao.com/oauth/authorize?client_id=" + kakaoClientId +
-                "&redirect_uri=" + kakaoRedirectUri +
+                "&redirect_uri=" + redirectUri +
                 "&response_type=code";
     }
 
@@ -44,7 +48,12 @@ public class KakaoClient {
      * @param code - 카카오에서 발급해준 인가 코드
      * @return - 카카오에서 반환한 응답 토큰 객체
      */
-    public KakaoToken getKakaoAccessToken(String code) {
+    public KakaoToken getKakaoAccessToken(String code, String redirectUri) {
+        // 별도의 리다이렉트 요청 URI 설정이 없을 경우, application.yml에 설정된 값 사용
+        if (redirectUri == null || redirectUri.isEmpty()) {
+            redirectUri = kakaoRedirectUri;
+        }
+
         // 요청 보낼 객체 기본 생성
         WebClient webClient = WebClient.create(kakaoTokenUri);
 
@@ -52,7 +61,7 @@ public class KakaoClient {
         MultiValueMap<String , String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", kakaoGrantType);
         params.add("client_id", kakaoClientId);
-        params.add("redirect_uri", kakaoRedirectUri);
+        params.add("redirect_uri", redirectUri);
         params.add("code", code);
         params.add("client_secret", kakaoClientSecret);
 

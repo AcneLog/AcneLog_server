@@ -26,22 +26,20 @@ public class MemberController {
 
     @GetMapping("/auth/login")
     public ResponseEntity<?> redirectLoginPage(
-            @RequestParam(name = "provider") String provider) {
-        // 회원가입 로직
-        if(provider.equals("kakao")) {
-            // 카카오 로그인 로직
-            String kakaoAuthUrl = memberService.getKakaoLoginUrl();
+            @RequestParam(name = "provider") String provider,
+            @RequestParam(name = "redirect-uri", required = false) String redirectUri) {
+        String authUrl = switch (provider) {
+            case "kakao" -> memberService.getKakaoLoginUrl(redirectUri);
+            case "google" -> memberService.getGoogleLoginUrl(redirectUri);
+            default -> throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
+        };
+
+        if(redirectUri == null || redirectUri.isEmpty()) {
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Location", kakaoAuthUrl);
-            return new ResponseEntity<>(headers, HttpStatus.FOUND);
-        } else if(provider.equals("google")) {
-            // 구글 로그인 로직
-            String googleAuthUrl = memberService.getGoogleLoginUrl();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Location", googleAuthUrl);
+            headers.add("Location", authUrl);
             return new ResponseEntity<>(headers, HttpStatus.FOUND);
         } else {
-            throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다.");
+            return ResponseEntity.ok(ApplicationResponse.ok(authUrl));
         }
     }
 
@@ -51,8 +49,9 @@ public class MemberController {
      */
     @GetMapping("/auth/kakao/login")
     public ApplicationResponse<MemberRes> loginWithKakao(
-            @RequestParam(name = "code") String authorizationCode) {
-        KakaoProfile kakaoProfile = memberService.loginWithKakao(authorizationCode);
+            @RequestParam(name = "code") String authorizationCode,
+            @RequestParam(name = "redirect-uri", required = false) String redirectUri) {
+        KakaoProfile kakaoProfile = memberService.loginWithKakao(authorizationCode, redirectUri);
         return ApplicationResponse.ok(memberService.register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname(), MemberType.KAKAO));
     }
 
@@ -62,8 +61,9 @@ public class MemberController {
      */
     @GetMapping("/auth/google/login")
     public ApplicationResponse<MemberRes> loginWithGoogle(
-            @RequestParam(name = "code") String authorizationCode) {
-        GoogleProfile googleProfile = memberService.loginWithGoogle(authorizationCode);
+            @RequestParam(name = "code") String authorizationCode,
+            @RequestParam(name = "redirect-uri", required = false) String redirectUri) {
+        GoogleProfile googleProfile = memberService.loginWithGoogle(authorizationCode, redirectUri);
         return ApplicationResponse.ok(memberService.register(googleProfile.email(), googleProfile.name(), MemberType.GOOGLE));
     }
 
@@ -72,12 +72,6 @@ public class MemberController {
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         // 회원탈퇴 로직
         memberService.withdrawal(principalDetails.getMember());
-    }
-
-    @PostMapping("/member/logout")
-    public void logout(
-            @AuthenticationPrincipal PrincipalDetails principalDetails) {
-        memberService.logout();
     }
 
     @GetMapping("/member/profile")

@@ -26,21 +26,21 @@ public class MemberService {
     private final GoogleClient googleClient;
     private final TokenProvider tokenProvider;
 
-    public String getKakaoLoginUrl() {
-        return kakaoClient.getKakaoAuthUrl();
+    public String getKakaoLoginUrl(String redirectUri) {
+        return kakaoClient.getKakaoAuthUrl(redirectUri);
     }
 
-    public String getGoogleLoginUrl() {
-        return googleClient.getGoogleAuthUrl();
+    public String getGoogleLoginUrl(String redirectUri) {
+        return googleClient.getGoogleAuthUrl(redirectUri);
     }
 
-    public KakaoProfile loginWithKakao(String authorizationCode) {
-        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(authorizationCode);
+    public KakaoProfile loginWithKakao(String authorizationCode, String redirectUri) {
+        KakaoToken kakaoToken = kakaoClient.getKakaoAccessToken(authorizationCode, redirectUri);
         return kakaoClient.getMemberInfo(kakaoToken);
     }
 
-    public GoogleProfile loginWithGoogle(String authorizationCode) {
-        GoogleToken googleToken = googleClient.getGoogleAccessToken(authorizationCode);
+    public GoogleProfile loginWithGoogle(String authorizationCode, String redirectUri) {
+        GoogleToken googleToken = googleClient.getGoogleAccessToken(authorizationCode, redirectUri);
         return googleClient.getMemberInfo(googleToken);
     }
 
