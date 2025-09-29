@@ -24,7 +24,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = resolveToken(request);
-        // String requestURI = request.getRequestURI();
 
         // 토큰이 존재할 경우, Authentication에 인증 정보 저장 및 로그 출력
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {

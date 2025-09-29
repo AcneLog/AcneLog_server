@@ -30,8 +30,8 @@ public class PrincipalDetails implements UserDetails { //, OAuth2User
     // 권한 정보 반환 (GENERAL, ADMIN 중 하나)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority(member.getMemberType()));
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + member.getMemberType().name()));
 
         return authorities;
     }
@@ -70,15 +70,4 @@ public class PrincipalDetails implements UserDetails { //, OAuth2User
     public boolean isEnabled() {
         return true;
     }
-
-// OAuth2User 인터페이스 메서드 (필요시 구현)
-//    @Override
-//    public String getName() {
-//        return member.getName();
-//    }
-//
-//    @Override
-//    public Map<String, Object> getAttributes() {
-//        return attributes;
-//    }
 }

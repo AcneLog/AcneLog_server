@@ -5,6 +5,7 @@ import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
 import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
+import hongik.triple.commonmodule.enumerate.MemberType;
 import hongik.triple.inframodule.oauth.google.GoogleProfile;
 import hongik.triple.inframodule.oauth.kakao.KakaoProfile;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,7 +53,7 @@ public class MemberController {
     public ApplicationResponse<MemberRes> loginWithKakao(
             @RequestParam(name = "code") String authorizationCode) {
         KakaoProfile kakaoProfile = memberService.loginWithKakao(authorizationCode);
-        return ApplicationResponse.ok(memberService.register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname()));
+        return ApplicationResponse.ok(memberService.register(kakaoProfile.kakao_account().email(), kakaoProfile.properties().nickname(), MemberType.KAKAO));
     }
 
     /**
@@ -63,7 +64,7 @@ public class MemberController {
     public ApplicationResponse<MemberRes> loginWithGoogle(
             @RequestParam(name = "code") String authorizationCode) {
         GoogleProfile googleProfile = memberService.loginWithGoogle(authorizationCode);
-        return ApplicationResponse.ok(memberService.register(googleProfile.email(), googleProfile.name()));
+        return ApplicationResponse.ok(memberService.register(googleProfile.email(), googleProfile.name(), MemberType.GOOGLE));
     }
 
     @PostMapping("/member/withdrawal")
@@ -79,10 +80,10 @@ public class MemberController {
         memberService.logout();
     }
 
-    @PostMapping("/member/profile")
-    public void getProfile(
+    @GetMapping("/member/profile")
+    public ApplicationResponse<MemberRes> getProfile(
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
-        memberService.getProfile(principalDetails.getMember());
+        return ApplicationResponse.ok(memberService.getProfile(principalDetails.getMember()));
     }
 
     @PatchMapping("/member/update")
