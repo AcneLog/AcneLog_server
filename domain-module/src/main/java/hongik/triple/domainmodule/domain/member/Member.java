@@ -1,7 +1,6 @@
 package hongik.triple.domainmodule.domain.member;
 
 import hongik.triple.commonmodule.enumerate.MemberType;
-import hongik.triple.commonmodule.enumerate.SkinType;
 import hongik.triple.domainmodule.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

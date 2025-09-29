@@ -3,7 +3,6 @@ package hongik.triple.apimodule.member;
 import hongik.triple.apimodule.application.member.MemberService;
 import hongik.triple.apimodule.global.security.jwt.TokenProvider;
 import hongik.triple.apimodule.global.security.jwt.TokenDto;
-import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
 import hongik.triple.commonmodule.enumerate.MemberType;
 import hongik.triple.domainmodule.domain.member.Member;
