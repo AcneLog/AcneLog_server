@@ -29,7 +29,7 @@ public class Member extends BaseTimeEntity {
     private MemberType memberType;
 
     @Column(name = "skin_type")
-    private String skinType; // SkinType enum의 값을 문자열로 저장
+    private String skinType; // AcneType enum의 값을 문자열로 저장
 
     public void updateSkinType(String skinType) {
         this.skinType = skinType;
@@ -39,6 +39,5 @@ public class Member extends BaseTimeEntity {
         this.name = name;
         this.email = email;
         this.memberType = memberType;
-        this.skinType = "normal"; // 기본값 설정
     }
 }

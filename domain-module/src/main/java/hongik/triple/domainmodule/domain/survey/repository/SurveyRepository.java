@@ -17,7 +17,7 @@ public interface SurveyRepository extends JpaRepository<Survey, Long> {
 
     Page<Survey> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    List<Survey> findByMember_MemberIdAndSkinType(Long memberId, SkinType skinType);
+    List<Survey> findAllByMember_MemberIdAndSkinType(Long memberId, SkinType skinType);
 
     @Query("SELECT s FROM Survey s WHERE s.createdAt >= :startDate AND s.createdAt <= :endDate")
     List<Survey> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate,

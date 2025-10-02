@@ -5,11 +5,9 @@ import lombok.Getter;
 @Getter
 public enum SkinType {
 
-    NORMAL("정상"),
-    COMEDONES("좁쌀"),
-    PUSTULES("화농성"),
-    PAPULES("염증성"),
-    FOLLICULITIS("모낭염");
+    OILY("지성"),
+    DRY("건성"),
+    COMBINATION("수부지");
 
     private final String description;
 

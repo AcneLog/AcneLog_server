@@ -1,5 +1,6 @@
 package hongik.triple.commonmodule.dto.survey;
 
+import hongik.triple.commonmodule.enumerate.AcneType;
 import hongik.triple.commonmodule.enumerate.SkinType;
 import lombok.Builder;
 
