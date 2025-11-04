@@ -37,7 +37,7 @@ public class AnalysisService {
          var videos = youtubeClient.searchVideos(analysisData.labelToSkinType().getDescription() + " 피부 관리", 3);
 
          // 진단 결과를 기반으로 맞춤형 제품 추천 (네이버 쇼핑 API)
-//        var products = naverClient.searchProducts(analysisData.labelToSkinType().getDescription() + " 피부 관리", 3);
+         var products = naverClient.searchProducts(analysisData.labelToSkinType().getDescription() + " 피부 관리", 3);
         
          // DB 저장
          Analysis.builder()
