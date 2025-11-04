@@ -1,7 +1,7 @@
 package hongik.triple.commonmodule.dto.analysis;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import hongik.triple.commonmodule.enumerate.SkinType;
+import hongik.triple.commonmodule.enumerate.AcneType;
 
 import java.util.List;
 
@@ -15,12 +15,12 @@ public record AnalysisData(
         List<Double> scores
 ) {
 
-    public SkinType labelToSkinType() {
+    public AcneType labelToSkinType() {
         return switch (this.predictionLabel) {
-            case "Comedones" -> SkinType.COMEDONES;
-            case "Pustules" -> SkinType.PUSTULES;
-            case "Papules" -> SkinType.PAPULES;
-            case "Folliculitis" -> SkinType.FOLLICULITIS;
+            case "Comedones" -> AcneType.COMEDONES;
+            case "Pustules" -> AcneType.PUSTULES;
+            case "Papules" -> AcneType.PAPULES;
+            case "Folliculitis" -> AcneType.FOLLICULITIS;
             default -> throw new IllegalArgumentException("Unknown label: " + this.predictionLabel);
         };
     }

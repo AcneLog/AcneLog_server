@@ -30,7 +30,6 @@ public class Survey extends BaseTimeEntity {
     private Object body;
 
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "skin_type", nullable = false)
     // @Enumerated(EnumType.STRING) 사용 X, String 형식으로 저장 (이유: description도 같이 저장되는 것을 방지하기 위해)
     private String skinType;
