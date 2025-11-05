@@ -58,8 +58,8 @@ public class AnalysisController {
     }
 
     @GetMapping("/detail/{analysisId}")
-    public ApplicationResponse<?> getAnalysisDetail(@PathVariable Long analysisId) {
-        return ApplicationResponse.ok();
+    public ApplicationResponse<?> getAnalysisDetail(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long analysisId) {
+        return ApplicationResponse.ok(analysisService.getAnalysisDetail(principalDetails.getMember(), analysisId));
     }
 
     @GetMapping("/log")

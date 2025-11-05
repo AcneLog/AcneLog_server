@@ -35,6 +35,8 @@ public class AnalysisService {
          }
 
          // Business Logic
+         // TODO: S3 파일 업로드
+
          // 피부 분석 AI 모델 호출
          AnalysisData analysisData = aiClient.sendPredictRequest(multipartFile);
 
@@ -68,6 +70,29 @@ public class AnalysisService {
                  AcneType.valueOf(saveAnalysis.getAcneType()).getGuide(),
                  videoList,
                  productList
+         );
+     }
+
+     public AnalysisRes getAnalysisDetail(Member member, Long analysisId) {
+         // Validation
+         Analysis analysis = analysisRepository.findById(analysisId)
+                 .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + analysisId));
+         // Analysis가 요청한 사용자의 분석 결과인지 확인
+         if(!analysis.getMember().getMemberId().equals(member.getMemberId())) {
+             throw new IllegalArgumentException("Unauthorized access to analysis with id: " + analysisId);
+         }
+
+        // Response
+         return new AnalysisRes(
+                 analysis.getAnalysisId(),
+                 analysis.getImageUrl(),
+                 analysis.getIsPublic(),
+                 AcneType.valueOf(analysis.getAcneType()).name(),
+                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                 AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                 AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                 analysis.getVideoData(),
+                 analysis.getProductData()
          );
      }
 }
