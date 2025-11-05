@@ -12,6 +12,8 @@ import hongik.triple.inframodule.ai.AIClient;
 import hongik.triple.inframodule.naver.NaverClient;
 import hongik.triple.inframodule.youtube.YoutubeClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +30,7 @@ public class AnalysisService {
      private final NaverClient naverClient;
      private final AnalysisRepository analysisRepository;
 
+     @Transactional
      public AnalysisRes performAnalysis(Member member, MultipartFile multipartFile) {
          // Validation
          if(multipartFile.isEmpty() || multipartFile.getSize() == 0) {
@@ -95,4 +98,111 @@ public class AnalysisService {
                  analysis.getProductData()
          );
      }
+
+     public List<AnalysisRes> getAnalysisListForMainPage() {
+            // Business Logic
+            List<Analysis> analyses = analysisRepository.findTop3ByOrderByCreatedAtDesc();
+
+            // Response
+            return analyses.stream().map(analysis -> new AnalysisRes(
+                    analysis.getAnalysisId(),
+                    analysis.getImageUrl(),
+                    analysis.getIsPublic(),
+                    AcneType.valueOf(analysis.getAcneType()).name(),
+                    AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                    AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                    AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                    analysis.getVideoData(),
+                    analysis.getProductData()
+            )).toList();
+     }
+
+    /**
+     * 피플즈 로그 페이지용 공개된 분석 기록 페이지네이션 조회
+     * @param acneType 여드름 타입 (ALL인 경우 전체 조회)
+     * @param pageable 페이지 정보
+     * @return 페이지네이션된 공개 분석 기록 리스트
+     */
+    public Page<AnalysisRes> getAnalysisPaginationForLogPage(String acneType, Pageable pageable) {
+        // Validation
+        // acneType이 ALL이 아닌 경우 유효성 검증
+        if (!"ALL".equalsIgnoreCase(acneType)) {
+            try {
+                AcneType.valueOf(acneType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid acne type: " + acneType);
+            }
+        }
+
+        // Business Logic
+        Page<Analysis> analysisPage;
+
+        // "ALL"인 경우 전체 공개 분석 조회, 아니면 타입별 공개 분석 조회
+        if ("ALL".equalsIgnoreCase(acneType)) {
+            analysisPage = analysisRepository.findByIsPublicTrueOrderByCreatedAtDesc(pageable);
+        } else {
+            analysisPage = analysisRepository.findByIsPublicTrueAndAcneTypeOrderByCreatedAtDesc(
+                    acneType.toUpperCase(), pageable);
+        }
+
+        // Response
+        return analysisPage.map(analysis -> new AnalysisRes(
+                analysis.getAnalysisId(),
+                analysis.getImageUrl(),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        ));
+    }
+
+    /**
+     * 마이페이지용 내 분석 기록 페이지네이션 조회
+     * @param member 현재 로그인한 회원
+     * @param acneType 여드름 타입 (ALL인 경우 전체 조회)
+     * @param pageable 페이지 정보
+     * @return 페이지네이션된 내 분석 기록 리스트
+     */
+    public Page<AnalysisRes> getAnalysisListForMyPage(Member member, String acneType, Pageable pageable) {
+        // Validation
+        if (member == null) {
+            throw new IllegalArgumentException("Member cannot be null");
+        }
+
+        // acneType이 ALL이 아닌 경우 유효성 검증
+        if (!"ALL".equalsIgnoreCase(acneType)) {
+            try {
+                AcneType.valueOf(acneType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid acne type: " + acneType);
+            }
+        }
+
+        // Business Logic
+        Page<Analysis> analysisPage;
+
+        // "ALL"인 경우 내 전체 분석 조회, 아니면 타입별 내 분석 조회
+        if ("ALL".equalsIgnoreCase(acneType)) {
+            analysisPage = analysisRepository.findByMemberOrderByCreatedAtDesc(member, pageable);
+        } else {
+            analysisPage = analysisRepository.findByMemberAndAcneTypeOrderByCreatedAtDesc(
+                    member, acneType.toUpperCase(), pageable);
+        }
+
+        // Response
+        return analysisPage.map(analysis -> new AnalysisRes(
+                analysis.getAnalysisId(),
+                analysis.getImageUrl(),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        ));
+    }
 }
