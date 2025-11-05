@@ -35,8 +35,8 @@ public class AnalysisController {
             @ApiResponse(responseCode = "500",
                     description = "서버 오류")
     })
-    public ApplicationResponse<?> performAnalysis(@RequestPart(value = "file") MultipartFile multipartFile) {
-        return ApplicationResponse.ok(analysisService.performAnalysis(null, multipartFile));
+    public ApplicationResponse<?> performAnalysis(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestPart(value = "file") MultipartFile multipartFile) {
+        return ApplicationResponse.ok(analysisService.performAnalysis(principalDetails.getMember(), multipartFile));
     }
 
     @GetMapping("/main")
