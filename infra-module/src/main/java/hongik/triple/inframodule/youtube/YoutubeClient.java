@@ -2,6 +2,7 @@ package hongik.triple.inframodule.youtube;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import hongik.triple.commonmodule.dto.analysis.YoutubeVideoDto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -149,13 +150,4 @@ public class YoutubeClient {
     public static class Thumbnail {
         private String url;
     }
-
-    // Result DTO
-    public record YoutubeVideoDto(
-            String videoId,
-            String videoTitle,
-            String videoUrl,
-            String channelName,
-            String thumbnailUrl
-    ) {}
 }

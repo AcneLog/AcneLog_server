@@ -1,6 +1,7 @@
 package hongik.triple.inframodule.naver;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import hongik.triple.commonmodule.dto.analysis.NaverProductDto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -171,16 +172,4 @@ public class NaverClient {
         private String category3;       // 카테고리3
         private String category4;       // 카테고리4
     }
-
-    // Result DTO
-    public record NaverProductDto(
-            String productId,
-            String productName,
-            String productUrl,
-            Integer productPrice,
-            String productImage,
-            String categoryName,
-            String mallName,
-            String brand
-    ) {}
 }
