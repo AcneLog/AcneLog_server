@@ -1,5 +1,6 @@
 package hongik.triple.domainmodule.domain.survey;
 
+import hongik.triple.commonmodule.enumerate.AcneType;
 import hongik.triple.commonmodule.enumerate.SkinType;
 import hongik.triple.domainmodule.common.BaseTimeEntity;
 import hongik.triple.domainmodule.domain.member.Member;
@@ -29,14 +30,14 @@ public class Survey extends BaseTimeEntity {
     private Object body;
 
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "skin_type", nullable = false)
-    private SkinType skinType;
+    // @Enumerated(EnumType.STRING) 사용 X, String 형식으로 저장 (이유: description도 같이 저장되는 것을 방지하기 위해)
+    private String skinType;
 
     @Builder
     public Survey(Member member, Object body, SkinType skinType) {
         this.member = member;
         this.body = body;
-        this.skinType = skinType;
+        this.skinType = skinType.name();
     }
 }

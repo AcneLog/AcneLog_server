@@ -53,7 +53,7 @@ public class SurveyService {
                 .surveyId(savedSurvey.getSurveyId())
                 .memberId(savedSurvey.getMember().getMemberId())
                 .memberName(savedSurvey.getMember().getName())
-                .skinType(savedSurvey.getSkinType())
+                .skinType(SkinType.valueOf(savedSurvey.getSkinType()))
                 .body((Map<String, Object>) savedSurvey.getBody())
                 .createdAt(savedSurvey.getCreatedAt())
                 .modifiedAt(savedSurvey.getModifiedAt())
@@ -146,17 +146,17 @@ public class SurveyService {
 
         // 점수 기반 피부 타입 결정 (심각도 순으로 우선순위)
         if (averageScore <= 2.0) {
-            return SkinType.NORMAL;
+            return SkinType.OILY;
         } else if (folliculitisScore >= 8) { // 모낭염 문항 평균 4점 이상
-            return SkinType.FOLLICULITIS;
+            return SkinType.OILY;
         } else if (pustuleScore >= 8) { // 화농성 문항 평균 4점 이상
-            return SkinType.PUSTULES;
+            return SkinType.OILY;
         } else if (inflammationScore >= 15) { // 염증성 문항 평균 3.75점 이상
-            return SkinType.PAPULES;
+            return SkinType.OILY;
         } else if (comedoneScore >= 12) { // 좁쌀 문항 평균 3점 이상
-            return SkinType.COMEDONES;
+            return SkinType.OILY;
         } else {
-            return SkinType.NORMAL;
+            return SkinType.OILY;
         }
     }
 
@@ -273,16 +273,12 @@ public class SurveyService {
 
     private String generateRecommendation(SkinType skinType) {
         switch (skinType) {
-            case NORMAL:
+            case OILY:
                 return "현재 피부 상태가 양호합니다. 기본적인 세안과 보습 관리를 지속하시고, 자외선 차단제를 꾸준히 사용하세요.";
-            case COMEDONES:
+            case COMBINATION:
                 return "좁쌀여드름이 있습니다. BHA나 살리실산 성분의 각질 제거 제품을 사용하고, 논코메도제닉 제품으로 모공 관리에 집중하세요.";
-            case PUSTULES:
+            case DRY:
                 return "화농성 여드름이 있습니다. 벤조일 퍼옥사이드나 항생제 성분이 포함된 제품을 사용하고, 피부과 전문의 상담을 받아보세요.";
-            case PAPULES:
-                return "염증성 여드름이 있습니다. 자극적인 제품 사용을 피하고 니아신아마이드, 아젤라산 등의 진정 성분으로 관리하며, 피부과 치료를 권장합니다.";
-            case FOLLICULITIS:
-                return "모낭염이 의심됩니다. 면도 후 항균 토너를 사용하고, 청결한 관리와 함께 피부과 전문의 진료를 받으시기 바랍니다.";
             default:
                 return "정확한 진단을 위해 피부과 전문의와 상담을 받아보세요.";
         }
@@ -481,12 +477,12 @@ public class SurveyService {
                 .surveyId(survey.getSurveyId())
                 .memberId(survey.getMember().getMemberId())
                 .memberName(survey.getMember().getName())
-                .skinType(survey.getSkinType())
+                .skinType(SkinType.valueOf(survey.getSkinType()))
                 .body((Map<String, Object>) survey.getBody())
                 .createdAt(survey.getCreatedAt())
                 .modifiedAt(survey.getModifiedAt())
                 .totalScore(calculateTotalScore((Map<String, Object>) survey.getBody()))
-                .recommendation(generateRecommendation(survey.getSkinType()))
+                .recommendation(generateRecommendation(SkinType.valueOf(survey.getSkinType())))
                 .build();
     }
 }

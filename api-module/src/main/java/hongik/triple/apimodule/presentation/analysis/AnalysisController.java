@@ -3,7 +3,6 @@ package hongik.triple.apimodule.presentation.analysis;
 import hongik.triple.apimodule.application.analysis.AnalysisService;
 import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
-import hongik.triple.commonmodule.dto.analysis.AnalysisReq;
 import hongik.triple.commonmodule.dto.analysis.AnalysisRes;
 import hongik.triple.commonmodule.dto.survey.SurveyRes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,8 +36,8 @@ public class AnalysisController {
             @ApiResponse(responseCode = "500",
                     description = "서버 오류")
     })
-    public ApplicationResponse<?> performAnalysis(@RequestPart(value = "file") MultipartFile multipartFile) {
-        return ApplicationResponse.ok(analysisService.performAnalysis(null, multipartFile));
+    public ApplicationResponse<?> performAnalysis(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestPart(value = "file") MultipartFile multipartFile) {
+        return ApplicationResponse.ok(analysisService.performAnalysis(principalDetails.getMember(), multipartFile));
     }
 
     @GetMapping("/main")
@@ -49,21 +50,24 @@ public class AnalysisController {
                     description = "서버 오류")
     })
     public ApplicationResponse<?> getAnalysisListForMainPage() {
-        return ApplicationResponse.ok();
+        return ApplicationResponse.ok(analysisService.getAnalysisListForMainPage());
     }
 
     @GetMapping("/my")
-    public ApplicationResponse<?> getAnalysisListForMyPage() {
-        return ApplicationResponse.ok();
+    public ApplicationResponse<?> getAnalysisListForMyPage(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                                           @RequestParam(name = "type") String acneType,
+                                                           @PageableDefault(size = 4) Pageable pageable) {
+        return ApplicationResponse.ok(analysisService.getAnalysisListForMyPage(principalDetails.getMember(), acneType, pageable));
     }
 
     @GetMapping("/detail/{analysisId}")
-    public ApplicationResponse<?> getAnalysisDetail(@PathVariable Long analysisId) {
-        return ApplicationResponse.ok();
+    public ApplicationResponse<?> getAnalysisDetail(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long analysisId) {
+        return ApplicationResponse.ok(analysisService.getAnalysisDetail(principalDetails.getMember(), analysisId));
     }
 
     @GetMapping("/log")
-    public ApplicationResponse<?> getAnalysisPaginationForLogPage() {
-        return ApplicationResponse.ok();
+    public ApplicationResponse<?> getAnalysisPaginationForLogPage(@RequestParam(name = "type") String acneType,
+                                                                  @PageableDefault(size = 4) Pageable pageable) {
+        return ApplicationResponse.ok(analysisService.getAnalysisPaginationForLogPage(acneType, pageable));
     }
 }
