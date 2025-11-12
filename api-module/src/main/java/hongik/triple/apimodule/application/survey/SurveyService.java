@@ -70,16 +70,12 @@ public class SurveyService {
                 .build();
     }
 
-    public Page<SurveyRes> getSurveyList(Long memberId, Pageable pageable) {
+    public Page<SurveyRes> getSurveyList(Member member, Pageable pageable) {
         // Validation
-        if (memberId != null) {
-            memberRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-        }
 
         // Business Logic
-        Page<Survey> surveys = (memberId != null)
-                ? surveyRepository.findByMember_MemberIdOrderByCreatedAtDesc(memberId, pageable)
+        Page<Survey> surveys = (member.getMemberId() != null)
+                ? surveyRepository.findByMember_MemberIdOrderByCreatedAtDesc(member.getMemberId(), pageable)
                 : surveyRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         // Response
