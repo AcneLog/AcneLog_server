@@ -10,7 +10,7 @@ import org.hibernate.annotations.SQLDelete;
 @Entity
 @Getter
 @Table(name = "member")
-@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where banner_id = ?")
+@SQLDelete(sql = "UPDATE member SET deleted_at = NOW() where member_id = ?")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Member extends BaseTimeEntity {
 

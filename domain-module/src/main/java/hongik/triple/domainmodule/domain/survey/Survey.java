@@ -13,7 +13,7 @@ import org.hibernate.annotations.SQLDelete;
 @Entity
 @Getter
 @Table(name = "survey")
-@SQLDelete(sql = "UPDATE survey SET deleted_at = NOW() where banner_id = ?")
+@SQLDelete(sql = "UPDATE survey SET deleted_at = NOW() where survey_id = ?")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Survey extends BaseTimeEntity {
 
@@ -28,7 +28,6 @@ public class Survey extends BaseTimeEntity {
 
     @Column(name = "body", columnDefinition = "json", nullable = false)
     private Object body;
-
 
     @Column(name = "skin_type", nullable = false)
     // @Enumerated(EnumType.STRING) 사용 X, String 형식으로 저장 (이유: description도 같이 저장되는 것을 방지하기 위해)

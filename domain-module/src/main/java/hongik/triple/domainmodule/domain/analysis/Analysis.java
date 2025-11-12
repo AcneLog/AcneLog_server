@@ -20,7 +20,7 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "analysis")
-@SQLDelete(sql = "UPDATE analysis SET deleted_at = NOW() where banner_id = ?")
+@SQLDelete(sql = "UPDATE analysis SET deleted_at = NOW() where analysis_id = ?")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Analysis extends BaseTimeEntity {
 
