@@ -42,3 +42,7 @@ application-common.yml
 application-domain.yml
 application-infra.yml
 application-domain-production.yml
+
+### Monitoring ###
+monitoring-docker-compose.yml
+prometheus.yml
