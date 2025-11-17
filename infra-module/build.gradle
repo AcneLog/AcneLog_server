@@ -6,7 +6,7 @@ dependencies {
     implementation project(":common-module")
 
     // Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // WebClient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
