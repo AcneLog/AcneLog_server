@@ -1,9 +1,6 @@
 package hongik.triple.apimodule.application.analysis;
 
-import hongik.triple.commonmodule.dto.analysis.AnalysisData;
-import hongik.triple.commonmodule.dto.analysis.AnalysisRes;
-import hongik.triple.commonmodule.dto.analysis.NaverProductDto;
-import hongik.triple.commonmodule.dto.analysis.YoutubeVideoDto;
+import hongik.triple.commonmodule.dto.analysis.*;
 import hongik.triple.commonmodule.enumerate.AcneType;
 import hongik.triple.domainmodule.domain.analysis.Analysis;
 import hongik.triple.domainmodule.domain.analysis.repository.AnalysisRepository;
@@ -101,12 +98,16 @@ public class AnalysisService {
          );
      }
 
-     public List<AnalysisRes> getAnalysisListForMainPage() {
+     public MainLogRes getAnalysisListForMainPage() {
             // Business Logic
-            List<Analysis> analyses = analysisRepository.findTop3ByOrderByCreatedAtDesc();
+            List<Analysis> analyses = analysisRepository.findTop3ByIsPublicTrueOrderByCreatedAtDesc();
+            int comedones = analysisRepository.countByAcneTypeAndIsPublicTrue("COMEDONES");
+            int pustules = analysisRepository.countByAcneTypeAndIsPublicTrue("PUSTULES");
+            int papules = analysisRepository.countByAcneTypeAndIsPublicTrue("PAPULES");
+            int follicultis = analysisRepository.countByAcneTypeAndIsPublicTrue("FOLLICULITIS");
 
             // Response
-            return analyses.stream().map(analysis -> new AnalysisRes(
+            List<AnalysisRes> analysisList = analyses.stream().map(analysis -> new AnalysisRes(
                     analysis.getAnalysisId(),
                     s3Client.getImage(analysis.getImageUrl()),
                     analysis.getIsPublic(),
@@ -117,6 +118,8 @@ public class AnalysisService {
                     analysis.getVideoData(),
                     analysis.getProductData()
             )).toList();
+
+            return MainLogRes.from(comedones, pustules, papules, follicultis, analysisList);
      }
 
     /**
@@ -206,5 +209,27 @@ public class AnalysisService {
                 analysis.getVideoData(),
                 analysis.getProductData()
         ));
+    }
+
+    /*
+    피플즈 로그 개별 화면 조회
+     */
+    public AnalysisRes getLogDetail(Long analysisId) {
+        // Validation
+        Analysis analysis = analysisRepository.findById(analysisId)
+                .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + analysisId));
+
+        // Response
+        return new AnalysisRes(
+                analysis.getAnalysisId(),
+                s3Client.getImage(analysis.getImageUrl()),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        );
     }
 }

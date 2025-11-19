@@ -43,6 +43,7 @@ public class AnalysisController {
     }
 
     @GetMapping("/main")
+    @Operation(summary = "[홈화면] 피플즈 로그 썸네일 조회", description = "홈화면의 피플즈 로그에 노출되는 상위 3개의 분석 이미지를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
                     description = "AnceLog Main Page 에서 노출할 피부 분석 이미지 결과 목록",
@@ -56,6 +57,7 @@ public class AnalysisController {
     }
 
     @GetMapping("/my")
+    @Operation(summary = "나의 진단로그 리스트 조회", description = "나의 진단로그 페이지의 리스트를 조회합니다.")
     public ApplicationResponse<?> getAnalysisListForMyPage(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                                            @RequestParam(name = "type") String acneType,
                                                            @PageableDefault(size = 4) Pageable pageable) {
@@ -63,14 +65,22 @@ public class AnalysisController {
     }
 
     @GetMapping("/detail/{analysisId}")
+    @Operation(summary = "나의 진단로그 상세페이지 조회", description = "나의 진단로그 페이지의 상세 페이지를 조회합니다.")
     public ApplicationResponse<?> getAnalysisDetail(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long analysisId) {
         return ApplicationResponse.ok(analysisService.getAnalysisDetail(principalDetails.getMember(), analysisId));
     }
 
     @GetMapping("/log")
+    @Operation(summary = "피플즈 로그 리스트 조회", description = "피플즈 로그 페이지의 리스트를 조회합니다.")
     public ApplicationResponse<?> getAnalysisPaginationForLogPage(@RequestParam(name = "type") String acneType,
                                                                   @PageableDefault(size = 4) Pageable pageable) {
         return ApplicationResponse.ok(analysisService.getAnalysisPaginationForLogPage(acneType, pageable));
+    }
+
+    @GetMapping("/log/{analysisId}")
+    @Operation(summary = "피플즈 로그 상세페이지 조회", description = "피플즈 로그 페이지의 상세 페이지를 조회합니다.")
+    public ApplicationResponse<?> getLogDetail(@PathVariable Long analysisId) {
+        return ApplicationResponse.ok(analysisService.getLogDetail(analysisId));
     }
 
     @PostMapping("/image")
