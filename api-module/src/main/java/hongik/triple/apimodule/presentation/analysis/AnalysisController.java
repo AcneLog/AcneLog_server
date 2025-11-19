@@ -5,6 +5,7 @@ import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
 import hongik.triple.commonmodule.dto.analysis.AnalysisRes;
 import hongik.triple.commonmodule.dto.survey.SurveyRes;
+import hongik.triple.inframodule.s3.S3Client;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AnalysisController {
 
     private final AnalysisService analysisService;
+    private final S3Client s3Client;
 
     @PostMapping("/perform")
     @Operation(summary = "피부 이미지 분석", description = "사용자에게 피부 이미지를 전달받아, 분석 결과를 조회합니다.")
@@ -69,5 +71,13 @@ public class AnalysisController {
     public ApplicationResponse<?> getAnalysisPaginationForLogPage(@RequestParam(name = "type") String acneType,
                                                                   @PageableDefault(size = 4) Pageable pageable) {
         return ApplicationResponse.ok(analysisService.getAnalysisPaginationForLogPage(acneType, pageable));
+    }
+
+    @DeleteMapping("/image")
+    @Operation(summary = "이미지 삭제", description = "S3에서 이미지를 삭제하는 API 입니다. (어드민용)")
+    public ApplicationResponse<?> delete(@RequestParam String key) {
+
+        s3Client.deleteImage(key);
+        return ApplicationResponse.ok("이미지가 삭제되었습니다.");
     }
 }
