@@ -73,6 +73,13 @@ public class AnalysisController {
         return ApplicationResponse.ok(analysisService.getAnalysisPaginationForLogPage(acneType, pageable));
     }
 
+    @PostMapping("/image")
+    @Operation(summary = "이미지 업로드", description = "S3에 이미지를 업로드하는 API 입니다. (어드민용)")
+    public ApplicationResponse<?> upload(@RequestPart MultipartFile file, @RequestParam(name = "dir") String dir) {
+
+        return ApplicationResponse.ok(s3Client.uploadImage(file, dir));
+    }
+
     @DeleteMapping("/image")
     @Operation(summary = "이미지 삭제", description = "S3에서 이미지를 삭제하는 API 입니다. (어드민용)")
     public ApplicationResponse<?> delete(@RequestParam String key) {
