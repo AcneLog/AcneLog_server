@@ -10,6 +10,12 @@ dependencies {
 
     // WebClient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // s3
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.766'
+
+    // web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 tasks.register("prepareKotlinBuildScriptModel"){}
