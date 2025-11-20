@@ -1,15 +1,13 @@
 package hongik.triple.apimodule.application.analysis;
 
-import hongik.triple.commonmodule.dto.analysis.AnalysisData;
-import hongik.triple.commonmodule.dto.analysis.AnalysisRes;
-import hongik.triple.commonmodule.dto.analysis.NaverProductDto;
-import hongik.triple.commonmodule.dto.analysis.YoutubeVideoDto;
+import hongik.triple.commonmodule.dto.analysis.*;
 import hongik.triple.commonmodule.enumerate.AcneType;
 import hongik.triple.domainmodule.domain.analysis.Analysis;
 import hongik.triple.domainmodule.domain.analysis.repository.AnalysisRepository;
 import hongik.triple.domainmodule.domain.member.Member;
 import hongik.triple.inframodule.ai.AIClient;
 import hongik.triple.inframodule.naver.NaverClient;
+import hongik.triple.inframodule.s3.S3Client;
 import hongik.triple.inframodule.youtube.YoutubeClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +27,7 @@ public class AnalysisService {
      private final YoutubeClient youtubeClient;
      private final NaverClient naverClient;
      private final AnalysisRepository analysisRepository;
+     private final S3Client s3Client;
 
      @Transactional
      public AnalysisRes performAnalysis(Member member, MultipartFile multipartFile) {
@@ -38,7 +37,7 @@ public class AnalysisService {
          }
 
          // Business Logic
-         // TODO: S3 파일 업로드
+         String s3_key = s3Client.uploadImage(multipartFile, "skin");
 
          // 피부 분석 AI 모델 호출
          AnalysisData analysisData = aiClient.sendPredictRequest(multipartFile);
@@ -55,7 +54,7 @@ public class AnalysisService {
          Analysis analysis = Analysis.builder()
                  .member(member)
                  .acneType(analysisData.labelToSkinType())
-                 .imageUrl("S3 URL or other storage URL")
+                 .imageUrl(s3_key)
                  .isPublic(true)
                  .videoData(videoList)
                  .productData(productList)
@@ -65,7 +64,7 @@ public class AnalysisService {
          // Response
          return new AnalysisRes(
                  saveAnalysis.getAnalysisId(),
-                 saveAnalysis.getImageUrl(),
+                 s3Client.getImage(saveAnalysis.getImageUrl()),
                  saveAnalysis.getIsPublic(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).name(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).getDescription(),
@@ -88,7 +87,7 @@ public class AnalysisService {
         // Response
          return new AnalysisRes(
                  analysis.getAnalysisId(),
-                 analysis.getImageUrl(),
+                 s3Client.getImage(analysis.getImageUrl()),
                  analysis.getIsPublic(),
                  AcneType.valueOf(analysis.getAcneType()).name(),
                  AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -99,14 +98,18 @@ public class AnalysisService {
          );
      }
 
-     public List<AnalysisRes> getAnalysisListForMainPage() {
+     public MainLogRes getAnalysisListForMainPage() {
             // Business Logic
-            List<Analysis> analyses = analysisRepository.findTop3ByOrderByCreatedAtDesc();
+            List<Analysis> analyses = analysisRepository.findTop3ByIsPublicTrueOrderByCreatedAtDesc();
+            int comedones = analysisRepository.countByAcneTypeAndIsPublicTrue("COMEDONES");
+            int pustules = analysisRepository.countByAcneTypeAndIsPublicTrue("PUSTULES");
+            int papules = analysisRepository.countByAcneTypeAndIsPublicTrue("PAPULES");
+            int follicultis = analysisRepository.countByAcneTypeAndIsPublicTrue("FOLLICULITIS");
 
             // Response
-            return analyses.stream().map(analysis -> new AnalysisRes(
+            List<AnalysisRes> analysisList = analyses.stream().map(analysis -> new AnalysisRes(
                     analysis.getAnalysisId(),
-                    analysis.getImageUrl(),
+                    s3Client.getImage(analysis.getImageUrl()),
                     analysis.getIsPublic(),
                     AcneType.valueOf(analysis.getAcneType()).name(),
                     AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -115,6 +118,8 @@ public class AnalysisService {
                     analysis.getVideoData(),
                     analysis.getProductData()
             )).toList();
+
+            return MainLogRes.from(comedones, pustules, papules, follicultis, analysisList);
      }
 
     /**
@@ -148,7 +153,7 @@ public class AnalysisService {
         // Response
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
-                analysis.getImageUrl(),
+                s3Client.getImage(analysis.getImageUrl()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -195,7 +200,7 @@ public class AnalysisService {
         // Response
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
-                analysis.getImageUrl(),
+                s3Client.getImage(analysis.getImageUrl()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -204,5 +209,27 @@ public class AnalysisService {
                 analysis.getVideoData(),
                 analysis.getProductData()
         ));
+    }
+
+    /*
+    피플즈 로그 개별 화면 조회
+     */
+    public AnalysisRes getLogDetail(Long analysisId) {
+        // Validation
+        Analysis analysis = analysisRepository.findById(analysisId)
+                .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + analysisId));
+
+        // Response
+        return new AnalysisRes(
+                analysis.getAnalysisId(),
+                s3Client.getImage(analysis.getImageUrl()),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        );
     }
 }

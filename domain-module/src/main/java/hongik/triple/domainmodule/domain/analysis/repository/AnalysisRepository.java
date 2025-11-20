@@ -11,7 +11,8 @@ import java.util.List;
 public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
 
     // 메인 페이지용
-    List<Analysis> findTop3ByOrderByCreatedAtDesc();
+    List<Analysis> findTop3ByIsPublicTrueOrderByCreatedAtDesc();
+    int countByAcneTypeAndIsPublicTrue(String acneType);
 
     // 피플즈 로그 페이지용 - 전체 공개 분석 조회
     Page<Analysis> findByIsPublicTrueOrderByCreatedAtDesc(Pageable pageable);
