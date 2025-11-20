@@ -44,12 +44,12 @@ public class AnalysisService {
 
          // 진단 결과를 기반으로 피부 관리 영상 추천 (유튜브 API)
          List<YoutubeVideoDto> videoList =
-                 youtubeClient.searchVideos(analysisData.labelToSkinType().getDescription() + " 피부 관리", 3);
+                 youtubeClient.searchVideos(analysisData.labelToSkinType().getKoreanName() + " 여드름", 3);
 
          // 진단 결과를 기반으로 맞춤형 제품 추천 (네이버 쇼핑 API)
          List<NaverProductDto> productList =
-                 naverClient.searchProducts(analysisData.labelToSkinType().getDescription() + " 피부 관리", 3);
-        
+                 naverClient.searchProducts(analysisData.labelToSkinType().getKoreanName() + " 여드름", 3);
+
          // DB 저장
          Analysis analysis = Analysis.builder()
                  .member(member)
