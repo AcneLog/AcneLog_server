@@ -241,6 +241,32 @@ public class AnalysisService {
         );
     }
 
+    @Transactional
+    public AnalysisRes updateIsPublic(Member member, AnalysisReq req) {
+        // Validation
+        Analysis analysis = analysisRepository.findById(req.analysisId())
+                .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + req.analysisId()));
+        // Analysis가 요청한 사용자의 분석 결과인지 확인
+        if(!analysis.getMember().getMemberId().equals(member.getMemberId())) {
+            throw new IllegalArgumentException("Unauthorized access to analysis with id: " + req.analysisId());
+        }
+
+        analysis.updateIsPublic(req.isPublic());
+
+        return new AnalysisRes(
+                analysis.getAnalysisId(),
+                s3Client.getImage(analysis.getImageUrl()),
+                formattedWithTime(analysis.getCreatedAt()),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        );
+    }
+
     private String formatted(LocalDateTime time) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         return time.format(formatter);
