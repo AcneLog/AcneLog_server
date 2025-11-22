@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -65,6 +67,7 @@ public class AnalysisService {
          return new AnalysisRes(
                  saveAnalysis.getAnalysisId(),
                  s3Client.getImage(saveAnalysis.getImageUrl()),
+                 formatted(saveAnalysis.getCreatedAt()),
                  saveAnalysis.getIsPublic(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).name(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).getDescription(),
@@ -88,6 +91,7 @@ public class AnalysisService {
          return new AnalysisRes(
                  analysis.getAnalysisId(),
                  s3Client.getImage(analysis.getImageUrl()),
+                 formattedWithTime(analysis.getCreatedAt()),
                  analysis.getIsPublic(),
                  AcneType.valueOf(analysis.getAcneType()).name(),
                  AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -110,6 +114,7 @@ public class AnalysisService {
             List<AnalysisRes> analysisList = analyses.stream().map(analysis -> new AnalysisRes(
                     analysis.getAnalysisId(),
                     s3Client.getImage(analysis.getImageUrl()),
+                    formatted(analysis.getCreatedAt()),
                     analysis.getIsPublic(),
                     AcneType.valueOf(analysis.getAcneType()).name(),
                     AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -154,6 +159,7 @@ public class AnalysisService {
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                formatted(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -201,6 +207,7 @@ public class AnalysisService {
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                formatted(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -223,6 +230,7 @@ public class AnalysisService {
         return new AnalysisRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                formattedWithTime(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -231,5 +239,15 @@ public class AnalysisService {
                 analysis.getVideoData(),
                 analysis.getProductData()
         );
+    }
+
+    private String formatted(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        return time.format(formatter);
+    }
+
+    private String formattedWithTime(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return time.format(formatter);
     }
 }
