@@ -221,15 +221,19 @@ public class AnalysisService {
     /*
     피플즈 로그 개별 화면 조회
      */
-    public AnalysisRes getLogDetail(Long analysisId) {
+    public AnalysisLogRes getLogDetail(Long analysisId) {
         // Validation
         Analysis analysis = analysisRepository.findById(analysisId)
                 .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + analysisId));
 
+        Member member = analysis.getMember();
+
         // Response
-        return new AnalysisRes(
+        return new AnalysisLogRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                member.getName(),
+                member.getSkinType(),
                 formattedWithTime(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
