@@ -47,6 +47,7 @@ public class SurveyService {
                 .build();
 
         Survey savedSurvey = surveyRepository.save(survey);
+        member.updateSkinType(skinType.name()); // 유저 피부타입 세팅
 
         // Response
         return SurveyRes.builder()

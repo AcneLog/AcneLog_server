@@ -50,6 +50,9 @@ public class Analysis extends BaseTimeEntity {
     @Column(name = "product_data", columnDefinition = "json")
     private List<NaverProductDto> productData;
 
+    public void updateIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 
     @Builder
     public Analysis(Member member,
