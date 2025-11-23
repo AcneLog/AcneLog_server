@@ -85,6 +85,7 @@ public class AnalysisController {
     }
 
     @PatchMapping("/public")
+    @Operation(summary = "진단 기록의 공개 여부 변경", description = "자신의 진단 기록에 대한 공개 여부를 변경합니다.")
     public ApplicationResponse<?> updateIsPublic(
             @AuthenticationPrincipal PrincipalDetails principalDetails,
             @RequestBody AnalysisReq req) {
