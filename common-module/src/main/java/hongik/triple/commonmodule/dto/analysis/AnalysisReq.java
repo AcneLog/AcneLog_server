@@ -1,4 +1,7 @@
 package hongik.triple.commonmodule.dto.analysis;
 
-public record AnalysisReq() {
+public record AnalysisReq(
+        Long analysisId,
+        Boolean isPublic
+) {
 }

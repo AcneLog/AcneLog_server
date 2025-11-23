@@ -3,6 +3,7 @@ package hongik.triple.apimodule.presentation.analysis;
 import hongik.triple.apimodule.application.analysis.AnalysisService;
 import hongik.triple.apimodule.global.common.ApplicationResponse;
 import hongik.triple.apimodule.global.security.PrincipalDetails;
+import hongik.triple.commonmodule.dto.analysis.AnalysisReq;
 import hongik.triple.commonmodule.dto.analysis.AnalysisRes;
 import hongik.triple.commonmodule.dto.survey.SurveyRes;
 import hongik.triple.inframodule.s3.S3Client;
@@ -81,6 +82,14 @@ public class AnalysisController {
     @Operation(summary = "피플즈 로그 상세페이지 조회", description = "피플즈 로그 페이지의 상세 페이지를 조회합니다.")
     public ApplicationResponse<?> getLogDetail(@PathVariable Long analysisId) {
         return ApplicationResponse.ok(analysisService.getLogDetail(analysisId));
+    }
+
+    @PatchMapping("/public")
+    @Operation(summary = "진단 기록의 공개 여부 변경", description = "자신의 진단 기록에 대한 공개 여부를 변경합니다.")
+    public ApplicationResponse<?> updateIsPublic(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @RequestBody AnalysisReq req) {
+        return ApplicationResponse.ok(analysisService.updateIsPublic(principalDetails.getMember(), req));
     }
 
     @PostMapping("/image")
