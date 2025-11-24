@@ -13,7 +13,7 @@ public record SurveyRes(
         Long surveyId,
         Long memberId,
         String memberName,
-        SkinType skinType,
+        String skinType,
         Map<String, Object> body,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,

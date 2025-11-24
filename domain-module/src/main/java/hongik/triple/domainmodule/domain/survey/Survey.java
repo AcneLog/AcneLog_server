@@ -8,7 +8,11 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 
 @Entity
 @Getter
@@ -26,15 +30,16 @@ public class Survey extends BaseTimeEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "body", columnDefinition = "json", nullable = false)
-    private Object body;
+    private Map<String, Object> body;
 
     @Column(name = "skin_type", nullable = false)
     // @Enumerated(EnumType.STRING) 사용 X, String 형식으로 저장 (이유: description도 같이 저장되는 것을 방지하기 위해)
     private String skinType;
 
     @Builder
-    public Survey(Member member, Object body, SkinType skinType) {
+    public Survey(Member member, Map<String, Object> body, SkinType skinType) {
         this.member = member;
         this.body = body;
         this.skinType = skinType.name();
