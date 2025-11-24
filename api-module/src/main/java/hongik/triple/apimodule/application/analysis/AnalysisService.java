@@ -280,4 +280,12 @@ public class AnalysisService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         return time.format(formatter);
     }
+
+    public List<YoutubeVideoDto> getYoutubeVideos() {
+        return youtubeClient.searchVideos("피부관리", 3);
+    }
+
+    public List<NaverProductDto> getNaverProducts() {
+        return naverClient.searchProducts("피부관리", 3);
+    }
 }
