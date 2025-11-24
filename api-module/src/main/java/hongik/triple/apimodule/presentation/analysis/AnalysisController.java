@@ -97,4 +97,16 @@ public class AnalysisController {
         s3Client.deleteImage(key);
         return ApplicationResponse.ok("이미지가 삭제되었습니다.");
     }
+
+    @GetMapping("/main/youtube")
+    @Operation(summary = "[홈화면] 유튜브 영상 추천 조회", description = "홈화면의 유튜브 영상 추천을 조회합니다.")
+    public ApplicationResponse<?> getYoutubeRecommendationsForMainPage() {
+        return ApplicationResponse.ok(analysisService.getYoutubeVideos());
+    }
+
+    @GetMapping("/main/product")
+    @Operation(summary = "[홈화면] 상품 추천 조회", description = "홈화면의 상품 추천을 조회합니다.")
+    public ApplicationResponse<?> getProductRecommendationsForMainPage() {
+        return ApplicationResponse.ok(analysisService.getNaverProducts());
+    }
 }
