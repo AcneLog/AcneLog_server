@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -65,6 +67,7 @@ public class AnalysisService {
          return new AnalysisRes(
                  saveAnalysis.getAnalysisId(),
                  s3Client.getImage(saveAnalysis.getImageUrl()),
+                 formatted(saveAnalysis.getCreatedAt()),
                  saveAnalysis.getIsPublic(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).name(),
                  AcneType.valueOf(saveAnalysis.getAcneType()).getDescription(),
@@ -88,6 +91,7 @@ public class AnalysisService {
          return new AnalysisRes(
                  analysis.getAnalysisId(),
                  s3Client.getImage(analysis.getImageUrl()),
+                 formattedWithTime(analysis.getCreatedAt()),
                  analysis.getIsPublic(),
                  AcneType.valueOf(analysis.getAcneType()).name(),
                  AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -110,6 +114,7 @@ public class AnalysisService {
             List<AnalysisRes> analysisList = analyses.stream().map(analysis -> new AnalysisRes(
                     analysis.getAnalysisId(),
                     s3Client.getImage(analysis.getImageUrl()),
+                    formatted(analysis.getCreatedAt()),
                     analysis.getIsPublic(),
                     AcneType.valueOf(analysis.getAcneType()).name(),
                     AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -154,6 +159,7 @@ public class AnalysisService {
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                formatted(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -201,6 +207,7 @@ public class AnalysisService {
         return analysisPage.map(analysis -> new AnalysisRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                formatted(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -214,15 +221,20 @@ public class AnalysisService {
     /*
     피플즈 로그 개별 화면 조회
      */
-    public AnalysisRes getLogDetail(Long analysisId) {
+    public AnalysisLogRes getLogDetail(Long analysisId) {
         // Validation
         Analysis analysis = analysisRepository.findById(analysisId)
                 .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + analysisId));
 
+        Member member = analysis.getMember();
+
         // Response
-        return new AnalysisRes(
+        return new AnalysisLogRes(
                 analysis.getAnalysisId(),
                 s3Client.getImage(analysis.getImageUrl()),
+                member.getName(),
+                member.getSkinType(),
+                formattedWithTime(analysis.getCreatedAt()),
                 analysis.getIsPublic(),
                 AcneType.valueOf(analysis.getAcneType()).name(),
                 AcneType.valueOf(analysis.getAcneType()).getDescription(),
@@ -233,11 +245,39 @@ public class AnalysisService {
         );
     }
 
-    public List<YoutubeVideoDto> getYoutubeVideos() {
-        return youtubeClient.searchVideos("피부관리", 3);
+    @Transactional
+    public AnalysisRes updateIsPublic(Member member, AnalysisReq req) {
+        // Validation
+        Analysis analysis = analysisRepository.findById(req.analysisId())
+                .orElseThrow(() -> new IllegalArgumentException("Analysis not found with id: " + req.analysisId()));
+        // Analysis가 요청한 사용자의 분석 결과인지 확인
+        if(!analysis.getMember().getMemberId().equals(member.getMemberId())) {
+            throw new IllegalArgumentException("Unauthorized access to analysis with id: " + req.analysisId());
+        }
+
+        analysis.updateIsPublic(req.isPublic());
+
+        return new AnalysisRes(
+                analysis.getAnalysisId(),
+                s3Client.getImage(analysis.getImageUrl()),
+                formattedWithTime(analysis.getCreatedAt()),
+                analysis.getIsPublic(),
+                AcneType.valueOf(analysis.getAcneType()).name(),
+                AcneType.valueOf(analysis.getAcneType()).getDescription(),
+                AcneType.valueOf(analysis.getAcneType()).getCareMethod(),
+                AcneType.valueOf(analysis.getAcneType()).getGuide(),
+                analysis.getVideoData(),
+                analysis.getProductData()
+        );
     }
 
-    public List<NaverProductDto> getNaverProducts() {
-        return naverClient.searchProducts("피부관리", 3);
+    private String formatted(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        return time.format(formatter);
+    }
+
+    private String formattedWithTime(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return time.format(formatter);
     }
 }

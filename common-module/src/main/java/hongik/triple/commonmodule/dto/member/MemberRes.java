@@ -9,6 +9,8 @@ public record MemberRes(
         Long id,
         String email,
         String name,
+        String skinType,
+        String surveyTime,
         String profileImageUrl,
         String thumbnailImageUrl,
         String nickname,
