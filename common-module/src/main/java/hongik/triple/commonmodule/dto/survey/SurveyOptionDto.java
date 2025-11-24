@@ -2,6 +2,6 @@ package hongik.triple.commonmodule.dto.survey;
 
 public record SurveyOptionDto(
         String optionId,
-        String optionText,
-        int score
+        String label,
+        int value  // 점수 값
 ) {}

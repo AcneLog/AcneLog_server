@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -55,12 +54,13 @@ public class SurveyController {
                     description = "서버 오류")
     })
     public ApplicationResponse<?> registerSurvey(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "설문조사 응답 데이터",
                     required = true,
                     content = @Content(schema = @Schema(implementation = SurveyReq.class)))
             @RequestBody SurveyReq request) {
-        return ApplicationResponse.ok(surveyService.registerSurvey(request));
+        return ApplicationResponse.ok(surveyService.registerSurvey(principalDetails.getMember(), request));
     }
 
     @GetMapping("/list")
