@@ -6,6 +6,7 @@ import hongik.triple.commonmodule.dto.survey.SurveyReq;
 import hongik.triple.commonmodule.dto.survey.SurveyRes;
 import hongik.triple.commonmodule.enumerate.SkinType;
 import hongik.triple.domainmodule.domain.member.Member;
+import hongik.triple.domainmodule.domain.member.repository.MemberRepository;
 import hongik.triple.domainmodule.domain.survey.Survey;
 import hongik.triple.domainmodule.domain.survey.repository.SurveyRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,13 @@ import java.util.stream.Collectors;
 public class SurveyService {
 
     private final SurveyRepository surveyRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
-    public SurveyRes registerSurvey(Member member, SurveyReq request) {
+    public SurveyRes registerSurvey(Member authenticatedUser, SurveyReq request) {
         // Validation
+        Member member = memberRepository.findById(authenticatedUser.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
         validateSurveyAnswers(request.answers());
 
         // Business Logic
