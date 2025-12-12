@@ -83,12 +83,14 @@ public class MemberService {
     @Transactional
     public MemberRes updateProfile(Member member, MemberReq memberReq) {
         member.updateSkinType(memberReq.skin_type());
+        member.updateName(memberReq.name());
         Member updateMember = memberRepository.save(member);
 
         return MemberRes.builder()
                 .id(updateMember.getMemberId())
                 .email(updateMember.getEmail())
                 .name(updateMember.getName())
+                .skinType(updateMember.getSkinType())
                 .build();
     }
 

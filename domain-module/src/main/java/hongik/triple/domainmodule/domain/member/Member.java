@@ -35,6 +35,10 @@ public class Member extends BaseTimeEntity {
         this.skinType = skinType;
     }
 
+    public void updateName(String name) {
+        this.name = name;
+    }
+
     public Member(String name, String email, MemberType memberType) {
         this.name = name;
         this.email = email;
