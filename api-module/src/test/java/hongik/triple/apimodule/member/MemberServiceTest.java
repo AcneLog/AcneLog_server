@@ -3,6 +3,7 @@ package hongik.triple.apimodule.member;
 import hongik.triple.apimodule.application.member.MemberService;
 import hongik.triple.apimodule.global.security.jwt.TokenProvider;
 import hongik.triple.apimodule.global.security.jwt.TokenDto;
+import hongik.triple.commonmodule.dto.member.MemberReq;
 import hongik.triple.commonmodule.dto.member.MemberRes;
 import hongik.triple.commonmodule.enumerate.MemberType;
 import hongik.triple.domainmodule.domain.member.Member;
@@ -350,29 +351,29 @@ public class MemberServiceTest {
         }
     }
 
-    // TODO: updateProfile() 메서드에 skin_type 필드 추가 후 테스트 케이스 수정
-//    @Nested
-//    @DisplayName("updateProfile()은")
-//    class UpdateProfileTest {
-//
-//        @Test
-//        @DisplayName("회원 정보를 정상적으로 수정한다.")
-//        void success() {
-//            // given
-//            Member member = new Member("oldName", "email@test.com", MemberType.KAKAO);
-//            MemberReq req = new MemberReq("newName", "OILY");
-//
-//            given(memberRepository.save(any(Member.class)))
-//                    .willReturn(member);
-//
-//            // when
-//            MemberRes result = memberService.updateProfile(member, req);
-//
-//            // then
-//            assertThat(result.name()).isEqualTo("newName");
-//            verify(memberRepository, times(1)).save(member);
-//        }
-//    }
+    @Nested
+    @DisplayName("updateProfile()은")
+    class UpdateProfileTest {
+
+        @Test
+        @DisplayName("회원 정보를 정상적으로 수정한다.")
+        void success() {
+            // given
+            Member member = new Member("oldName", "email@test.com", MemberType.KAKAO);
+            MemberReq req = new MemberReq("newName", "OILY");
+
+            given(memberRepository.save(any(Member.class)))
+                    .willReturn(member);
+
+            // when
+            MemberRes result = memberService.updateProfile(member, req);
+
+            // then
+            assertThat(result.name()).isEqualTo("newName");
+            assertThat(result.skinType()).isEqualTo("OILY");
+            verify(memberRepository, times(1)).save(member);
+        }
+    }
 
     @Nested
     @DisplayName("withdrawal()은")
